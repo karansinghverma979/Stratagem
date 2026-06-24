@@ -11,39 +11,78 @@ Welcome to the official Operator's Manual for **Stratagem 1.0.1**—a highly adv
 
 This document serves as the master guide to all operational sectors, dashboard windows, and diagnostic consoles within the system.
 
+<img width="512" height="512" alt="icon" src="https://github.com/user-attachments/assets/2748268e-f1d1-4948-b178-deb3f53f5c4d" />
+
+
 ---
 
 ## 🛠️ CORE SYSTEM COMPONENT DOCUMENTATION
 
-### 0. SYSTEM BOOT SEQUENCE (Cold Boot Loading Screen)
-<!-- --image: Cold Boot Loading Screen -- -->
+
+## 0. SYSTEM BOOT SEQUENCE (Cold Boot Loading Screen)
+
+<img width="2879" height="1799" alt="Screenshot 2026-06-25 051940" src="https://github.com/user-attachments/assets/bb7b9956-8fe0-487e-97b4-4ed835d09d9f" />
+
 * **UI & Aesthetics**: A dark, full-screen holographic terminal overlay. Employs a scrolling diagnostics log printing hexadecimal address blocks, loading status indicators, and system checks. Features an oversized header reading `SYSTEM BOOT SEQUENCE` with a shimmering neon gradient pulse and high-contrast typography.
 * **Function & Abilities**: Plays the `cold-boot` console chime on mount. Runs a sequential initialization loop checking Electron IPC connections, querying registry portals, and mounting the SQLite database. Once complete, it executes a Svelte transition fade-out to reveal the main workspace.
 
+---
+
 ### 1. CRITICAL PURGE CONSOLE (Nuke Storage Protocol)
-<!-- --image: Nuke Storage Protocol Screen -- -->
+
+<img width="2879" height="1799" alt="Screenshot 2026-06-25 044836" src="https://github.com/user-attachments/assets/74945c67-9b65-4fd8-944a-caa844c2497d" />
+
 * **UI & Aesthetics**: High-intensity Tactical Red glassmorphic full-screen overlay. Includes a neon-glowing 60-second circular progress countdown SVG, a diagonal scrolling caution safeguard tape animation, and a real-time data table showing active system snapshots. The container is subject to a kinetic vibration effect (`dumpShake` keyframe loop) when active.
 * **Function & Abilities**: A lock-out screen that suspends all other UI interactions. Once authorized, it initiates a complete transactional database purge, deleting all rows in `missions` and `audit_log`, resetting configs, and displaying a Cyan-themed `SYSTEM REBOOT` controller to reinitialize the empty database workspace.
 
+---
+
 ### 2. DATABASE INTEGRITY STATION (System Backup Matrix)
-<!-- --image: Database Integration Panel -- -->
+
+<img width="2879" height="1799" alt="Screenshot 2026-06-25 044823" src="https://github.com/user-attachments/assets/bb199aa2-32aa-4d54-965f-40fd4bc6b09c" />
+
+
 * **UI & Aesthetics**: Located inside the Intelligence Hub modal, styled with glowing emerald and cyan borders. Features database path readouts with a pen-and-paper SVG cursor hover effect, and diagnostic progress bars.
 * **Function & Abilities**: Links the user to native Windows shell functions to open the database filepath directly in Windows Explorer. Contains triggers for local `.db` binary exporting and JSON config backups, showing stateful color indicators (orange for processing, green for success, red for failures) and displaying holographic copy notifications.
 
+---
+
 ### 3. NEURAL LINK STATION (Diagnostics Feed Console)
-<!-- --image: Neural Link Station Terminal -- -->
+
+<img width="2879" height="1799" alt="Screenshot 2026-06-25 044722" src="https://github.com/user-attachments/assets/7182c6f0-bf4c-4edb-9aae-791f855c4c9a" />
+
+
+<img width="2879" height="1799" alt="Screenshot 2026-06-25 044905" src="https://github.com/user-attachments/assets/ac28d791-d24a-4b80-a372-208844383b14" />
+
+
+<img width="2879" height="1799" alt="Screenshot 2026-06-25 044916" src="https://github.com/user-attachments/assets/fea94212-d9a2-45d8-8d9e-32009225b70a" />
+
+
+
 * **UI & Aesthetics**: A vertically layout terminal console streaming simulated cybernetic synchronization telemetry logs. Uses mono-spaced font weights, dotted data matrices, and active checking marks.
 * **Function & Abilities**: Handles custom configuration file imports. Displays real-time validation checks for uploaded data schemas. If a file is successfully parsed, it triggers store syncs and plays the `success-ping` sound; otherwise, it highlights structural syntax errors in red.
 
+---
+
 ### 4. FORGE STATION (Task Forge Modal)
-<!-- --image: Task Forge Modal Interface -- -->
+
+<img width="2879" height="1799" alt="Screenshot 2026-06-25 045010" src="https://github.com/user-attachments/assets/e2a46996-f036-420d-bdd2-2859a7bd178d" />
+
+
 * **UI & Aesthetics**: A prominent modal overlay (spanning 75vw) featuring a 3D glassmorphic panel, high-contrast inputs, and a target validation telemetry card on the top right. Displays the primary **Omni-Scope v6.0** targeting reticle.
 * **Function & Abilities**: The central command window for adding new missions. Operator inputs are dynamically validated for length and characters. Provides priority selectors, tactical tags configurations, and integrates the temporal date scheduler, writing entries directly into SQLite.
 
+---
+
 ### 5. TEMPORAL NEXUS (Forge Calendar Engine)
-<!-- --image: Temporal Nexus Calendar Grid -- -->
+
+<img width="2879" height="1799" alt="Screenshot 2026-06-25 045033" src="https://github.com/user-attachments/assets/55100b73-8dff-4313-937b-a6ba28c043b0" />
+
+
 * **UI & Aesthetics**: A 500px circular grid layout representing dates, styled with thin glowing lines, month/year selector dropdown menus, and neon indicators.
 * **Function & Abilities**: A custom-coded calendar calendar grid utilizing timezone arithmetic and leap-year calculations. Blocks selection of past dates, highlights target dates in neon cyan, and outputs selected date captures back to the parent Forge modal.
+
+---
 
 ### 6. MISSION PROTOCOL MODAL (Execution Task View)
 <!-- --image: Mission Protocol Modal -- -->

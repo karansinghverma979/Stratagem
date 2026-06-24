@@ -1,55 +1,70 @@
-# DESIGN DIRECTIVE — TACTICAL CYBERPUNK FUI SYSTEM
+# 🌌 STRATAGEM: UI/UX DESIGN & TECHNOLOGY BLUEPRINT
+> **System Architecture, Design Principles, and Technical Visual Implementation**
 
-You are designing a classified intelligence operating system from a futuristic world.
-Every screen must feel like a command terminal, a strategic war room, a neural control station, and an AI-linked tactical environment.
-The user should feel powerful, dangerous, strategic, and connected to an advanced intelligence network.
-This is Cinematic Tactical Cyberpunk Interface Design.
+---
 
-## CORE DESIGN PHILOSOPHY
-- The interface must feel like a "living digital command infrastructure."
-- Not flat, casual, or corporate. It must be atmospheric, immersive, operational, high-authority, and classified.
-- The system must appear as if it controls missions, intelligence, breaches, neural networks, tactical operations, and cognitive infrastructure.
+## 🛰️ 1. MISSION PURPOSE & CONCEPT
+The core objective of **Stratagem** is to replace boring, flat, corporate project planners with a high-fidelity, atmospheric **Futuristic User Interface (FUI)**. The design simulates a classified tactical terminal in a neural-linked command center. 
 
-## VISUAL IDENTITY
-- **Environment:** Extremely dark environment. Primary backgrounds: near-black, midnight blue, deep indigo, dark violet.
-- **Rules:** Never use pure flat black. Always introduce soft gradients, subtle noise, atmospheric bloom, and depth layering. The darkness must feel alive.
+By utilizing dark color fields, floating glass panels, physical hover elevations, and spatial audio feedback, the application transforms daily task tracking and schedule management into a gamified, high-authority strategic operation.
 
-## COLOR LANGUAGE
-- **Purple / Neon Violet (Primary Intelligence):** Represents neural systems, AI infrastructure, futuristic cognition. Use for active states, selected tabs, primary glow, neural interfaces.
-- **Red (Danger/Hostile):** Reserved for danger, irreversible actions, breaches, system corruption, purge operations. Use sparingly to maintain authority.
-- **Cyan / Electric Blue (Utility):** Represents system utilities, exports, technical processes, diagnostics.
-- **Green (Success):** Represents validated operations, successful synchronization, stable execution, verified states.
+---
 
-## LIGHTING & DEPTH DESIGN
-- **Atmospheric Neon Illumination:** Glow is structure, not decoration. Use edge glow, bloom diffusion, internal illumination, ambient light spill.
-- **Depth System:** Every component must feel layered. Use inner/outer shadows, glass-like gradients, elevated cards, inset panels. It should resemble a physical futuristic console, not a webpage.
+## 🎨 2. CORE VISUAL SYSTEM (THE FUI DESIGN SYSTEM)
 
-## PANEL & TYPOGRAPHY SYSTEM
-- **Panels:** Modular intelligence modules. Use rounded tactical containers, thin neon borders, glowing edge strokes. Spacing must be engineered and precise—never overcrowd.
-- **Typography:** Military command systems. Use bold futuristic sans-serif (e.g., Outfit), uppercase labels, expanded letter spacing. Headings must feel authoritative (e.g., CRITICAL PURGE DETECTED).
-- **Hierarchy:** Primary (massive bold headings), Secondary (operational sections like Tactical Operations), Tertiary (telemetry, metadata, packets, diagnostics).
+### 🌓 Volumetric Darkness (No Flat Black)
+* **Obsidian Gradients**: Never use a single flat `#000000` background. Primary containers utilize deep indigo, near-black, and dark violet gradients:
+  `background: linear-gradient(180deg, rgba(13, 15, 30, 0.95) 0%, rgba(2, 2, 5, 1) 100%);`
+* **Atmospheric Noise**: Subtle noise layers, holographic grid lines, and diagonal raster scanlines are composited over dark layers to make the darkness feel alive.
 
-## INTERACTION & UI LANGUAGE
-- **Interaction:** Buttons should feel powerful, mechanical, with heavy glow and strong contrast. Primary actions appear energetic and dangerous.
-- **Language Overrides:**
-  - Tasks -> Missions
-  - Categories -> Sectors
-  - Delete -> Purge
-  - Upload -> Neural Merge
-  - Dashboard -> Intelligence Hub
+### 🔮 Volumetric Light & Neon Illumination
+* **Glow as Structure**: Glowing lines are used to define panel contours and button states. Soft glows are generated using dual box-shadow and text-shadow filters:
+  `box-shadow: 0 0 25px rgba(139, 92, 246, 0.65), inset 0 0 12px rgba(255, 255, 255, 0.15);`
+* **Volumetric Glint Sweeps**: Dynamic, rotating diagonal glint lines (`.btn-liquid-sweep` and `.btn-shine-overlay`) slice across interactive buttons to simulate high-tech reflective glass.
 
-## SCREEN DESIGN PHILOSOPHY
-- Every screen represents a **system state** (e.g., breach state, synchronization state), telling a story.
-- **Execution Screen:** Mission deployment board (mission cards, objective counters, threat filters).
-- **Purge Screen:** Psychological tension (red atmospheric glow, centered modal isolation, countdowns).
-- **Neural Link Screen:** Procedural intelligence transfer (sequential process stages, verification indicators).
-- **System Hub:** Core intelligence center (diagnostics, system metrics, storage intelligence).
-- **The Forge:** Mission creation is ritualistic and strategic (temporal boundaries, threat levels, authorizing a covert operation).
-- **Motion Design:** Slow, smooth, heavy, cinematic (system boot animations, scanning effects, pulse glows, neural signal movement). Avoid playful or bouncy consumer microinteractions.
+### 🧪 Semantic Color Coding (FUI Color Dictionary)
+* 🟣 **Neon Violet (Primary Intelligence)**: Represents neural sync, global active states, active tab pills, and core menu selection.
+* 🔵 **Cyan / Electric Blue (Utility & Diagnostics)**: Represents databases, copy/paste cues, files, folders, and standard lock confirmations.
+* 🔴 **Tactical Red (Breach & Purge)**: Represents compromised states, overdue tasks, irreversibility, system purge warnings, and close actions.
+* 🟢 **Secured Emerald (Success & Stable)**: Represents completed missions, successful backups, database synchronization, and reboot triggers.
 
-## PERFORMANCE & MEMORY CONSTRAINT DIRECTIVES
-- **Overlapping Backdrop Filters:** Never stack multiple heavy `backdrop-filter: blur(...)` elements on top of each other.
-- **Background Suspends:** When a full-screen or large modal/overlay window is open (e.g., Task View, Forge Modal, Calendar Nexus, or Stratagem Hub), suspend/disable the underlying background animations, rotating gradients, and frosted glass blurs of the main page (using Svelte conditional `{#if}` blocks).
-- **DOM Visibility Culling:** Apply `display: none` to the main viewport wrapper or inactive underlying pages when modals are active. This removes hidden elements from the GPU compositor tree to avoid warnings like "tile memory limits exceeded" and ensure 60fps lag-free animations.
-- **Resource Cleanup:** Disable mouse tilt listeners, mouse tracks, and SVG rotating vectors in background panels when their containing view is covered or inactive.
+---
 
+## 🧬 3. TECHNOLOGY MATRIX (HOW WE USE THE STACK)
+
+```mermaid
+graph TD
+    A[Electron Main Process] <-->|Secure IPC Bridge| B[Preload Script API]
+    B <-->|contextBridge| C[Svelte 5 UI Engine]
+    C <-->|Reactive Stores| D[App Views / Sectors]
+    A <-->|sqlite3 native driver| E[SQLite3 Database]
+    A <-->|Registry Access| F[Windows Registry]
+```
+
+### 🖥️ Electron Framework (The Hardware Wrapper)
+* **Frameless Native Canvas**: Electron is configured with a frameless, non-resizable kiosk-ready window wrapper. Drag regions (`-webkit-app-region: drag`) are custom-mapped around headers to support native dragging while inputs bypass drag capture.
+* **Registry Integration**: Exposes native access to Windows Registry paths (`HKCU\Software\Strategem 1.0`). Electron queries these keys on boot to mount SQLite database filepaths (`DatabasePath`) dynamically.
+* **Shell Integration**: Links the frontend UI directly to the OS shell (`shell.showItemInFolder`) to open database folders in Windows Explorer.
+
+### ⚡ Svelte 5 Compiler (The UI Engine)
+* **Svelte Runes ($state, $derived, $effect)**: Leveraged for reactive data bindings. Store parameters, search filters, and priority states are bound using `$derived` runes to ensure recalculations happen at compiler speed.
+* **Key-Based Animations**: Utilizes Svelte's `animate:flip` and transition engines to support physics-based shuffling on Kanban card drops and task lists.
+* **DOM Culling**: Implemented conditional rendering (`{#if}`) to fully mount and unmount resource-heavy overlays (like the System Hub and Nuke Screens), preventing WebGL and backdrop filter stack limits.
+
+### 💾 SQLite3 (The Core Memory)
+* **Persistent Data Layer**: Replaces volatile memory stores with a high-speed SQLite database engine (`stratagem_intel.db`).
+* **Structured Schemes**: Operates three relational tables (`config`, `missions`, `audit_log`) supporting transactional logs and automated cascade deletes on purged tasks.
+* **IPC Channel Bridging**: Data queries are executed in the Node main process and bridged via pre-compiled secure channels (`db-fetch-missions`, `db-insert-mission`) to keep the Svelte UI thread lag-free.
+
+### 🔊 Spatial Audio Engine
+* **Interactive Sound Feedback**: Sound effects (e.g. system boot beep, click confirmations, card-drop clacks, and nuke alarm pulses) are triggered dynamically during interface transitions.
+* **Exception Safeguard**: Audio play calls are protected by error-catching structures that log module problems to console debug files and prevent the application from crashing on systems without active sound cards.
+
+---
+
+## ⚡ 4. PERFORMANCE & MEMORY CONSTRAINT ARCHITECTURES
+
+To maintain 60 FPS visual smoothness across high-resolution screens:
+1. **No Backdrop Filter Stacking**: The heavy `backdrop-filter: blur(...)` style is applied only to primary overlays. Stacking multiple blurred panels is banned.
+2. **Background Suspension**: When a full-screen overlay (e.g., Nuke screen or Intelligence Hub) is active, Svelte conditional blocks remove underlying pages from the DOM tree, freeing up GPU compositor tile memory.
+3. **Photon Animation Cleaning**: Rotating elements (such as the Omni-Scope radars and synaptic brain nodes) suspend their CSS keyframes and intervals when hidden or minimized.

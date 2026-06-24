@@ -1,0 +1,280 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800;900&family=Rajdhani:wght@500;600;700&family=Share+Tech+Mono&display=swap');
+@import './base.css';
+
+:root {
+  /* 1. The Color System - Hyper-Vibrant FUI Palette */
+  --base-background: #020205;
+  --bg-darker: #010103;
+  --bg-panel: rgba(13, 15, 30, 0.45);
+  
+  /* Neon Core */
+  --primary-accent: #8b5cf6;       /* Neon Violet */
+  --primary-glow: rgba(139, 92, 246, 0.5);
+  --secondary-accent: #ec4899;     /* Hot Magenta */
+  --secondary-glow: rgba(236, 72, 153, 0.5);
+  --tertiary-accent: #0ea5e9;      /* Electric Cyan */
+  --tertiary-glow: rgba(14, 165, 233, 0.5);
+  
+  /* Semantic Tones */
+  --critical-alert: #ff2d55;       /* Dangerous Red */
+  --secure-status: #00ff9f;        /* Hyper Green */
+  --warning-amber: #ffb800;        /* Warning Gold */
+  --info-blue: #00d1ff;           /* Info Cyan */
+
+  /* 2. Advanced Volumetric Architecture (Glassmorphism 2.0) */
+  --glass-bg: linear-gradient(135deg, rgba(20, 22, 40, 0.4) 0%, rgba(10, 10, 20, 0.7) 100%);
+  --glass-blur: blur(30px) saturate(180%);
+  --glass-border: 1px solid rgba(255, 255, 255, 0.1);
+  --glass-highlight: inset 0 1px 0 rgba(255, 255, 255, 0.15), inset 1px 0 0 rgba(255, 255, 255, 0.05);
+  --glass-inner-glow: inset 0 0 25px rgba(139, 92, 246, 0.1);
+  --glass-reflection: linear-gradient(135deg, rgba(255,255,255,0.15) 0%, transparent 40%, transparent 60%, rgba(255,255,255,0.05) 100%);
+  
+  /* Energy Borders & Glows */
+  --energy-border: 1px solid var(--primary-accent);
+  --energy-glow: 0 0 15px var(--primary-glow), inset 0 0 10px var(--primary-glow);
+  
+  /* 3. Global Scaling & Spacing (FUI Grid) */
+  --fui-scale: 1; 
+  --font-base: calc(16px * var(--fui-scale));
+  --fui-unit: 8px;
+  
+  --fui-radius-sm: 6px;
+  --fui-radius-md: 16px;
+  --fui-radius-lg: 32px;
+  
+  --fui-gap: calc(24px * var(--fui-scale));
+  --fui-padding: calc(32px * var(--fui-scale));
+  
+  /* 4. Animation Timing */
+  --ease-fui: cubic-bezier(0.16, 1, 0.3, 1);
+  --anim-slow: 0.6s var(--ease-fui);
+  --anim-fast: 0.2s var(--ease-fui);
+  --anim-shimmer: shimmer 8s infinite linear;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  background-color: var(--base-background);
+  color: #ffffff;
+  font-family: 'Outfit', 'Inter', sans-serif;
+  font-size: var(--font-base);
+  line-height: 1.5;
+  overflow: hidden;
+  height: 100vh;
+  width: 100vw;
+  user-select: none;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* --- HYPER-AESTHETIC TYPOGRAPHY --- */
+.fui-h1 {
+  font-size: calc(4rem * var(--fui-scale));
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  word-spacing: 0.28em;
+  line-height: 0.9;
+  background: linear-gradient(180deg, #fff 0%, rgba(255,255,255,0.6) 50%, rgba(139, 92, 246, 0.4) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  filter: drop-shadow(0 0 20px var(--primary-glow));
+  margin-bottom: var(--fui-unit);
+}
+
+.fui-h2 {
+  font-size: calc(2rem * var(--fui-scale));
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  word-spacing: 0.24em;
+  color: #fff;
+  text-shadow: 0 0 10px rgba(255, 255, 255, 0.2);
+}
+
+.fui-label {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: calc(0.9rem * var(--fui-scale));
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.25em;
+  word-spacing: 0.35em;
+  color: var(--primary-accent);
+  text-shadow: 0 0 8px var(--primary-glow);
+}
+
+.fui-telemetry {
+  font-family: ui-monospace, 'Cascadia Code', monospace;
+  font-size: calc(0.75rem * var(--fui-scale));
+  opacity: 0.7;
+  letter-spacing: 0.1em;
+  word-spacing: 0.18em;
+  color: var(--tertiary-accent);
+}
+
+/* --- THE COMPONENT SYSTEM --- */
+
+.fui-container {
+  padding: var(--fui-padding);
+  display: flex;
+  flex-direction: column;
+  gap: var(--fui-gap);
+  height: 100%;
+  overflow-y: auto;
+  scrollbar-gutter: stable;
+}
+
+/* The Core Panel - Glass 2.0 */
+.fui-panel {
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: var(--glass-border);
+  box-shadow: 
+    0 30px 60px rgba(0,0,0,0.6),
+    var(--glass-highlight),
+    var(--glass-inner-glow);
+  border-radius: var(--fui-radius-md);
+  padding: var(--fui-padding);
+  position: relative;
+  overflow: hidden;
+  transition: all var(--anim-slow);
+}
+
+/* Specular Highlight Layer */
+.fui-panel::after {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: var(--glass-reflection);
+  pointer-events: none;
+  opacity: 0.5;
+}
+
+/* Interactive States */
+.fui-panel-interactive:hover {
+  transform: translateY(-6px) scale(1.005);
+  box-shadow: 
+    0 40px 80px rgba(0,0,0,0.7),
+    0 0 30px var(--primary-glow),
+    var(--glass-highlight);
+  border-color: rgba(139, 92, 246, 0.5);
+}
+
+/* --- BUTTONS & CONTROLS --- */
+.fui-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 14px 36px;
+  background: rgba(139, 92, 246, 0.08);
+  border: 1px solid var(--primary-accent);
+  border-radius: var(--fui-radius-sm);
+  color: #fff;
+  font-family: 'Outfit', sans-serif;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  word-spacing: 0.22em;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  transition: all var(--anim-fast);
+  box-shadow: 0 0 10px rgba(139, 92, 246, 0.2);
+}
+
+.fui-button::after {
+  content: '';
+  position: absolute;
+  top: 0; left: -100%; width: 100%; height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+  transition: 0.6s var(--ease-fui);
+}
+
+.fui-button:hover::after {
+  left: 100%;
+}
+
+.fui-button:hover {
+  background: var(--primary-accent);
+  box-shadow: 0 0 35px var(--primary-glow);
+  transform: translateY(-2px);
+}
+
+.fui-button-magenta {
+  border-color: var(--secondary-accent);
+  background: rgba(236, 72, 153, 0.08);
+  box-shadow: 0 0 10px rgba(236, 72, 153, 0.2);
+}
+.fui-button-magenta:hover {
+  background: var(--secondary-accent);
+  box-shadow: 0 0 35px var(--secondary-glow);
+}
+
+/* --- ANIMATIONS & EFFECTS --- */
+
+/* Scanline Effect Refined */
+.fui-scanline {
+  position: absolute;
+  top: 0; left: 0; width: 100%; height: 100%;
+  background: linear-gradient(
+    to bottom,
+    transparent 50%,
+    rgba(139, 92, 246, 0.05) 50%,
+    rgba(139, 92, 246, 0.05) 51%,
+    transparent 51%
+  );
+  background-size: 100% 4px;
+  pointer-events: none;
+  z-index: 10;
+  opacity: 0.15;
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% center; }
+  100% { background-position: 200% center; }
+}
+
+/* Scrollbar Styling */
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 10px;
+}
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(to bottom, var(--primary-accent), var(--secondary-accent));
+  border-radius: 10px;
+  box-shadow: 0 0 15px var(--primary-glow);
+  border: 2px solid rgba(0,0,0,0.5);
+}
+
+/* Noise Texture Overlay */
+.fui-noise {
+  position: fixed;
+  top: 0; left: 0; width: 100%; height: 100%;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3%3Ffilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+  opacity: 0.03;
+  pointer-events: none;
+  z-index: 9999;
+}
+
+/* Suspend background animations when overlay modals are active to prevent GPU tile memory limits exceeded error */
+.system-suspended * {
+  animation-play-state: paused !important;
+}
+
+/* Global typography word-spacing adjustment for 'Outfit' and uppercase FUI components to match expanded letter-spacing */
+button,
+.font-outfit,
+[class*="btn"],
+[class*="button"],
+h1, h2, h3, h4, h5, h6,
+.fui-h1, .fui-h2, .fui-label, .fui-telemetry {
+  word-spacing: 0.18em !important;
+}
+
+
+
+

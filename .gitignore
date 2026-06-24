@@ -1,0 +1,73 @@
+# ============================================================
+# STRATAGEM — .gitignore
+# ============================================================
+
+# ── Node ────────────────────────────────────────────────────
+node_modules/
+
+# ── Build & Compiler Output ─────────────────────────────────
+out/
+dist/
+release/
+*.tsbuildinfo
+.vite/
+.eslintcache
+
+# ── Electron Builder Release Artifacts ──────────────────────
+*.exe
+*.dmg
+*.AppImage
+*.snap
+*.deb
+
+# ── SQLite Database Files ───────────────────────────────────
+# The live database lives in AppData — never commit it.
+*.db
+*.db-journal
+*.db-shm
+*.db-wal
+
+# ── Environment & Secrets ───────────────────────────────────
+.env
+.env.*
+!.env.example
+
+# ── OS & Editor Artefacts ───────────────────────────────────
+.DS_Store
+Thumbs.db
+desktop.ini
+.idea/
+*.swp
+*.swo
+
+# ── Logs ────────────────────────────────────────────────────
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# ============================================================
+# PRIVATE ASSETS — DO NOT COMMIT UNDER ANY CIRCUMSTANCES
+# These directories hold personal/sensitive media that must
+# never appear in a public repository.
+# ============================================================
+
+# Nudity assets (images & audio effects)
+src/renderer/src/sectors/Genesis/GenesisMain/AIGirlPanel/Nudity/assets/
+src/renderer/src/sectors/Genesis/GenesisMain/AIGirlPanel/Nudity/effects/
+
+# NoteCards image library
+src/renderer/src/sectors/Genesis/GenesisMain/AIGirlPanel/NoteCards/Cards/
+
+# Developer portrait images
+src/renderer/src/sectors/Genesis/GenesisMain/DeveloperPanel/devImages/
+
+# ── Local Utility Scripts & Temp Diffs ───────────────────────
+fix*.py
+scale*.py
+revert*.py
+update*.py
+process*.py
+update_hub.js
+temp_diff*.txt
+

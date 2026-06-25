@@ -326,3 +326,26 @@ For AI assistant configurations and operational prompts, review **[GEMINI.md](GE
 
 ---
 *Classified Document — Authorization Level 4 Required — Stratagem Core AI*
+
+---
+
+<div align="center">
+
+# KARAN SINGH VERMA
+
+### *IRRATIONAL FRENZY CONTROLLED BY REASON AND SELF REFLECTION.*
+
+<br />
+
+### 🛠️ Core Technologies
+
+<p align="center">
+  <img src="https://img.shields.io/badge/Svelte-FF3E00?style=for-the-badge&logo=svelte&logoColor=white" alt="Svelte" />
+  <img src="https://img.shields.io/badge/CSS3-1572B6?style=for-the-badge&logo=css3&logoColor=white" alt="CSS" />
+  <img src="https://img.shields.io/badge/JavaScript-F7DF1E?style=for-the-badge&logo=javascript&logoColor=black" alt="JavaScript" />
+  <img src="https://img.shields.io/badge/TypeScript-007ACC?style=for-the-badge&logo=typescript&logoColor=white" alt="TypeScript" />
+</p>
+
+---
+
+</div>

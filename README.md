@@ -322,7 +322,7 @@ This document serves as the master guide to all operational sectors, dashboard w
 
 For details on cloning this repository, installing dependencies, or compiling local builds, review **[guid.md](guid.md)**.
 For database schemas, preload APIs, and Svelte store references, review **[info.md](info.md)**.
-For AI assistant configurations and operational prompts, review **[gemini.md](gemini.md)**.
+For AI assistant configurations and operational prompts, review **[GEMINI.md](GEMINI.md)**.
 
 ---
 *Classified Document — Authorization Level 4 Required — Stratagem Core AI*

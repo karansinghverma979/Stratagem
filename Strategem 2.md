@@ -209,3 +209,37 @@ The app logo has been completely redesigned for a massive taskbar and desktop pr
 * **Main Process Registration:** Exposed a new IPC listener `window-minimize` in `src/main/index.ts` that triggers `mainWindow.minimize()`.
 * **Preload API:** Exposed `minimizeWindow: () => ipcRenderer.send('window-minimize')` on the `osAPI` bridge with matching TypeScript declarations in `src/preload/index.d.ts`.
 * **Hotkey Handler:** Integrated a global keydown handler in `src/renderer/src/App.svelte` mapping `e.metaKey && e.code === 'KeyM'` to `window.osAPI.minimizeWindow()`. This ensures that pressing the standard Windows keyboard shortcut `Win+M` inside the application smoothly and immediately minimizes the Electron kiosk window to the taskbar.
+
+---
+
+## 🚀 STRATAGEM 2.0 PRODUCTION RELEASE METADATA
+
+* **Release Tag:** `v2.0.0`
+* **Release Title:** `Stratagem 2.0: Cosmic Containment & Temporal Calibrator`
+* **Release Description:** 
+
+> **ATTENTION COMMAND OPERATOR:** This marks the deployment of the official production release **v2.0.0** of the **Stratagem Neural Command Terminal**. All system sectors have been fully synchronized, optimized, and locked for kiosk execution.
+
+### 🌌 DEPLOYED SUB-LINK UPGRADES & TACTICAL LOGS
+
+1. **⏱️ Chronos Sector & Unified Clock:**
+   - Unified the left sidebar layout, placing the **Todo panel first** and the **Timer panel third**.
+   - Verified local system clock synchronization, supporting smooth 12-hour/24-hour visual shifts.
+
+2. **⚔️ Execution Sector & Subtasks:**
+   - Implemented promotional task highlighting, featuring a **4.5-second breathing neon violet flash**.
+   - Removed drag-and-drop subtask handlers in favor of precise, lag-free **Move Up and Move Down hover buttons**.
+   - Integrated the **Patience Strategy** during victory and abort confirmation flows, keeping the screen locked under an immersive FUI loading screen for 750ms during database writes.
+
+3. **🛡️ Breach Sector & Confined Status Mapping:**
+   - Locked the Breach sector logic to evaluate **only active execution tasks**, resolving data conflicts with raw intel or archived tasks.
+   - Simplified the threat badges to read `{threatLevel} PRIORITY` (e.g. `HIGH PRIORITY`).
+   - Upgraded the temporal realign modal overlay with a **glassmorphic backdrop blur (10px)** that dims background content.
+
+4. **💾 Archive Sector & Database-backed Timestamps:**
+   - Introduced a new SQLite `completed_at` table column to write precision resolution timestamps.
+   - Refined `store.js` and Svelte files with robust string safety checks and case-insensitive filters to fix the disappearing record bugs.
+   - Configured the **Days Spent** metrics to compute inclusive days spent from initiation to archiving (e.g. July 11 to July 19 displays exactly **10 days spent**).
+
+5. **⌨️ Shortcuts & App Kiosk Controls:**
+   - Integrated `Win+M` hotkey captures in Svelte and registered the corresponding `window-minimize` main process IPC channel to minimize the frameless app smoothly.

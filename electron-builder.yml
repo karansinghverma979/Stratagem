@@ -1,5 +1,7 @@
 appId: com.stratagem.n0furnace
 productName: Stratagem
+copyright: Copyright © 2025 Karan Singh Verma
+compression: maximum
 directories:
   buildResources: build
 files:
@@ -19,6 +21,7 @@ extraResources:
     to: DeveloperPanel/devImages
 win:
   executableName: Stratagem
+  requestedExecutionLevel: asInvoker
 nsis:
   artifactName: ${productName}-${version}-setup.${ext}
   shortcutName: ${productName}

@@ -16,7 +16,8 @@ import {
   verifyHandshake,
   mergeDatabaseFile,
   seedDatabase,
-  getDatabasePath
+  getDatabasePath,
+  checkpointDatabase
 } from './database'
 import { getRegistryValue } from './registry'
 
@@ -29,18 +30,18 @@ interface CacheEntry {
 
 const fileCache = new Map<string, CacheEntry>()
 
-function getCachedFileData(filePath: string, mimeType: string): string {
-  const stat = fs.statSync(filePath)
+async function getCachedFileData(filePath: string, mimeType: string): Promise<string> {
+  const stat = await fs.promises.stat(filePath)
   const mtime = stat.mtimeMs
   const cached = fileCache.get(filePath)
   if (cached && cached.mtime === mtime) {
     return cached.base64
   }
-  const fileBuffer = fs.readFileSync(filePath)
+  const fileBuffer = await fs.promises.readFile(filePath)
   const base64Data = fileBuffer.toString('base64')
   const result = `data:${mimeType};base64,${base64Data}`
   
-  if (fileCache.size >= 50) {
+  if (fileCache.size >= 20) {
     const keys = Array.from(fileCache.keys())
     const oldestKey = keys[0]
     fileCache.delete(oldestKey)
@@ -93,6 +94,15 @@ function resolveAIGirlFolderPath(folderName: string): string {
   }
 }
 
+function getNotesDir(): string {
+  const defaultDir = join(app.getPath('home'), 'Obsidian', 'Strategies');
+  if (!app.isPackaged) {
+    return defaultDir;
+  }
+  return getRegistryValue('NotesPath', defaultDir);
+}
+
+
 function ensureDirectoryPopulated(targetDir: string, resourceSubPath: string) {
   try {
     if (!fs.existsSync(targetDir)) {
@@ -122,6 +132,20 @@ function ensureDirectoryPopulated(targetDir: string, resourceSubPath: string) {
 }
 
 function syncDefaultAssets() {
+  // Pre-create subfolders in Strategies notes directory
+  const notesDir = getNotesDir();
+  const subfolders = ['Arsenal', 'Execution', 'Archive'];
+  for (const sub of subfolders) {
+    const p = join(notesDir, sub);
+    if (!fs.existsSync(p)) {
+      try {
+        fs.mkdirSync(p, { recursive: true });
+      } catch (err) {
+        console.error(`[NotesSync] Failed to pre-create notes subfolder: ${p}`, err);
+      }
+    }
+  }
+
   const isDev = !app.isPackaged;
   if (isDev) return;
 
@@ -132,10 +156,22 @@ function syncDefaultAssets() {
   const noteCardsDir = getRegistryValue('NoteCardsPath', join(defaultUserData, 'NoteCards'));
   const nudityDir = join(defaultUserData, 'Nudity');
 
+  // Seed developer portraits and nudity assets on first install
   ensureDirectoryPopulated(devImagesDir, 'DeveloperPanel/devImages');
-  ensureDirectoryPopulated(join(noteCardsDir, 'Cards'), 'NoteCards/Cards');
   ensureDirectoryPopulated(join(nudityDir, 'assets'), 'Nudity/assets');
   ensureDirectoryPopulated(join(nudityDir, 'effects'), 'Nudity/effects');
+
+  // NoteCards: only create the folder structure empty — do NOT seed any default cards.
+  // The user starts with a clean NoteCards collection on first launch.
+  const noteCardsCardsDir = join(noteCardsDir, 'Cards');
+  if (!fs.existsSync(noteCardsCardsDir)) {
+    try {
+      fs.mkdirSync(noteCardsCardsDir, { recursive: true });
+      console.log('[AssetSync] Created empty NoteCards/Cards directory for fresh start.');
+    } catch (err) {
+      console.error('[AssetSync] Failed to create NoteCards/Cards directory:', err);
+    }
+  }
 }
 
 function createWindow(): void {
@@ -194,6 +230,79 @@ function createWindow(): void {
   setupWatchers(win)
 }
 
+async function runUninstallBackup(backupDir: string) {
+  try {
+    console.log(`[UninstallBackup] Initializing export to: ${backupDir}`)
+    
+    // 1. Ensure backup directory exists
+    await fs.promises.mkdir(backupDir, { recursive: true })
+    const dbBackupDir = join(backupDir, 'Database')
+    await fs.promises.mkdir(dbBackupDir, { recursive: true })
+    
+    // 2. Checkpoint Database to flush WAL to the main file
+    await checkpointDatabase()
+    
+    // 3. Copy the database file
+    const dbPath = getDatabasePath()
+    if (fs.existsSync(dbPath)) {
+      await fs.promises.copyFile(dbPath, join(dbBackupDir, 'stratagem_intel.db'))
+      console.log('[UninstallBackup] Database file successfully copied to backup.')
+    }
+
+    // 4. Copy quotes books
+    const quotesDir = join(app.getPath('userData'), 'quotes')
+    const quotesBackupDir = join(backupDir, 'Quotes')
+    if (fs.existsSync(quotesDir)) {
+      await fs.promises.mkdir(quotesBackupDir, { recursive: true })
+      const files = await fs.promises.readdir(quotesDir)
+      for (const file of files) {
+        if (file !== 'improvements.json') {
+          const src = join(quotesDir, file)
+          const dest = join(quotesBackupDir, file)
+          await fs.promises.copyFile(src, dest)
+        }
+      }
+      console.log('[UninstallBackup] Quotes books exported successfully.')
+    }
+
+    // 5. Export unresolved neural uplinks in a single .md file
+    const improvementsPath = join(quotesDir, 'improvements.json')
+    if (fs.existsSync(improvementsPath)) {
+      const dataStr = await fs.promises.readFile(improvementsPath, 'utf8')
+      const items = JSON.parse(dataStr)
+      if (Array.isArray(items)) {
+        const unresolved = items.filter((item: any) => !item.resolved)
+        
+        let mdContent = `# Unresolved Neural Uplinks\n`
+        mdContent += `Exported on: ${new Date().toISOString().replace('T', ' ').substring(0, 19)}\n\n`
+        
+        if (unresolved.length === 0) {
+          mdContent += `No unresolved neural uplinks found.\n`
+        } else {
+          for (const item of unresolved) {
+            mdContent += `## [${item.category || 'GENERAL'}] - ${item.location || 'UNKNOWN'} (Timestamp: ${item.timestamp || 'N/A'})\n`
+            mdContent += `- **Agency**: ${item.agency || 'N/A'}\n`
+            mdContent += `- **Priority**: ${item.priority || 'MED'}\n`
+            mdContent += `- **Tolerance**: ${item.tolerance || 'N/A'}\n`
+            mdContent += `- **Operator**: ${item.operator || 'N/A'}\n\n`
+            mdContent += `### Content:\n${item.content || ''}\n\n`
+            mdContent += `---\n\n`
+          }
+        }
+        
+        await fs.promises.writeFile(join(backupDir, 'unresolved_uplinks.md'), mdContent, 'utf8')
+        console.log('[UninstallBackup] Unresolved neural uplinks exported to unresolved_uplinks.md.')
+      }
+    }
+
+    console.log('[UninstallBackup] Export complete. Exiting.')
+    app.quit()
+  } catch (err: any) {
+    console.error('[UninstallBackup] Critical failure during uninstallation export:', err)
+    app.quit()
+  }
+}
+
 let dbFileExisted = false
 
 const gotTheLock = app.requestSingleInstanceLock()
@@ -217,6 +326,9 @@ if (!gotTheLock) {
 
     // Window control listeners
     ipcMain.on('window-close', () => app.quit())
+    ipcMain.on('window-minimize', () => {
+      if (mainWindow) mainWindow.minimize()
+    })
     ipcMain.on('window-toggle-maximize', () => {
       if (mainWindow) {
         if (mainWindow.isMaximized()) mainWindow.unmaximize()
@@ -465,6 +577,7 @@ if (!gotTheLock) {
   })
 
   ipcMain.handle('db-update-mission-status', async (_event, { id, status }) => {
+    await handleNoteMoveOnMissionUpdate(id, undefined, status)
     const result = await updateMissionStatus(id, status)
     appendNoteAuditLog(id, 'STATUS_CHANGE', `Status updated to ${status}`)
     return result
@@ -481,12 +594,18 @@ if (!gotTheLock) {
   })
 
   ipcMain.handle('db-reschedule-mission', async (_event, { id, newDeadline }) => {
+    await handleNoteMoveOnMissionUpdate(id, undefined, 'EXECUTION')
     const result = await updateMissionAsRescheduled(id, newDeadline)
     appendNoteAuditLog(id, 'DEADLINE_CHANGE', `Temporal boundary set to: ${newDeadline}`)
     return result
   })
 
   ipcMain.handle('db-update-mission-details', async (_event, { id, title, classifications, threatLevel, deadline, status }) => {
+    const tbUpper = (deadline || '').trim().toUpperCase();
+    const hasDeadline = deadline && tbUpper !== '' && tbUpper !== 'TBD' && tbUpper !== 'READY' && tbUpper !== 'DEPLOYED' && tbUpper !== 'NO DEADLINE' && tbUpper !== 'CLOSED';
+    let targetStatus = status;
+    if (hasDeadline) targetStatus = 'EXECUTION';
+    await handleNoteMoveOnMissionUpdate(id, title, targetStatus)
     return await updateMissionDetails(id, title, classifications, threatLevel, deadline, status)
   })
 
@@ -574,30 +693,124 @@ if (!gotTheLock) {
     });
   }
 
-  ipcMain.handle('note-exists', (_event, id) => {
-    const notesDir = join(app.getPath('home'), 'StratagemNotes')
-    const notePath = join(notesDir, `task_${id}.md`)
-    return fs.existsSync(notePath)
+  function getNotePathForMissionTitleAndStatus(title: string, status: string): string {
+    const notesDir = getNotesDir();
+    let subfolder = 'Arsenal';
+    const cleanStatus = (status || 'RAW_INTEL').toUpperCase();
+    if (cleanStatus === 'EXECUTION' || cleanStatus === 'BREACH') {
+      subfolder = 'Execution';
+    } else if (cleanStatus === 'VICTORY' || cleanStatus === 'ABORTED') {
+      subfolder = 'Archive';
+    }
+    
+    const folderPath = join(notesDir, subfolder);
+    if (!fs.existsSync(folderPath)) {
+      fs.mkdirSync(folderPath, { recursive: true });
+    }
+    
+    const sanitizedTitle = title.replace(/[\\/:*?"<>|]/g, '_').trim();
+    return join(folderPath, `${sanitizedTitle}.md`);
+  }
+
+  async function getNotePathForMission(id: number): Promise<string> {
+    const mission = await getMissionById(id);
+    if (!mission) {
+      throw new Error(`Mission not found with ID ${id}`);
+    }
+    const notesDir = getNotesDir();
+    
+    let subfolder = 'Arsenal';
+    const status = (mission.status || 'RAW_INTEL').toUpperCase();
+    if (status === 'EXECUTION' || status === 'BREACH') {
+      subfolder = 'Execution';
+    } else if (status === 'VICTORY' || status === 'ABORTED') {
+      subfolder = 'Archive';
+    }
+    
+    const folderPath = join(notesDir, subfolder);
+    if (!fs.existsSync(folderPath)) {
+      fs.mkdirSync(folderPath, { recursive: true });
+    }
+    
+    const sanitizedTitle = mission.title.replace(/[\\/:*?"<>|]/g, '_').trim();
+    const newPath = join(folderPath, `${sanitizedTitle}.md`);
+    
+    // Migration Check: if old file task_${id}.md exists in notesDir, rename/migrate it to the new path!
+    const oldLegacyPath = join(notesDir, `task_${id}.md`);
+    if (fs.existsSync(oldLegacyPath)) {
+      try {
+        fs.renameSync(oldLegacyPath, newPath);
+        console.log(`[NotesMigration] Migrated legacy note from "${oldLegacyPath}" to "${newPath}"`);
+      } catch (e) {
+        console.warn(`[NotesMigration] Failed to migrate legacy note:`, e);
+      }
+    }
+    
+    return newPath;
+  }
+
+  async function handleNoteMoveOnMissionUpdate(id: number, nextTitle?: string, nextStatus?: string) {
+    try {
+      const oldMission = await getMissionById(id);
+      if (!oldMission) return;
+      
+      const newTitle = nextTitle !== undefined ? nextTitle : oldMission.title;
+      const newStatus = nextStatus !== undefined ? nextStatus : oldMission.status;
+      
+      if (oldMission.title === newTitle && oldMission.status === newStatus) return;
+      
+      const oldPath = getNotePathForMissionTitleAndStatus(oldMission.title, oldMission.status);
+      const newPath = getNotePathForMissionTitleAndStatus(newTitle, newStatus);
+      
+      if (oldPath !== newPath && fs.existsSync(oldPath)) {
+        await fs.promises.rename(oldPath, newPath);
+        console.log(`[NotesManager] Moved note from "${oldPath}" to "${newPath}"`);
+      }
+    } catch (e) {
+      console.error('[NotesManager] Failed to move note on update:', e);
+    }
+  }
+
+  ipcMain.handle('note-exists', async (_event, id) => {
+    try {
+      const notePath = await getNotePathForMission(id)
+      return fs.existsSync(notePath)
+    } catch (e) {
+      console.error('[note-exists] Failed:', e)
+      return false
+    }
   })
 
-  ipcMain.handle('note-read', (_event, { id }) => {
-    const notesDir = join(app.getPath('home'), 'StratagemNotes')
-    const notePath = join(notesDir, `task_${id}.md`)
-    if (fs.existsSync(notePath)) {
-      return fs.readFileSync(notePath, 'utf-8')
-    } else {
+  ipcMain.handle('note-read', async (_event, { id }) => {
+    try {
+      const notePath = await getNotePathForMission(id)
+      try {
+        await fs.promises.access(notePath)
+        return await fs.promises.readFile(notePath, 'utf-8')
+      } catch (err) {
+        return ''
+      }
+    } catch (e) {
+      console.error('[note-read] Failed:', e)
       return ''
     }
   })
 
-  ipcMain.handle('note-write', (_event, { id, content }) => {
-    const notesDir = join(app.getPath('home'), 'StratagemNotes')
-    if (!fs.existsSync(notesDir)) {
-      fs.mkdirSync(notesDir, { recursive: true })
+  ipcMain.handle('note-write', async (_event, { id, content }) => {
+    try {
+      const notePath = await getNotePathForMission(id)
+      const folderPath = join(notePath, '..')
+      try {
+        await fs.promises.access(folderPath)
+      } catch (err) {
+        await fs.promises.mkdir(folderPath, { recursive: true })
+      }
+      await fs.promises.writeFile(notePath, content, 'utf-8')
+      return { success: true }
+    } catch (e) {
+      console.error('[note-write] Failed:', e)
+      return { success: false, error: (e as Error).message }
     }
-    const notePath = join(notesDir, `task_${id}.md`)
-    fs.writeFileSync(notePath, content, 'utf-8')
-    return { success: true }
   })
 
   ipcMain.handle('note-append-log', (_event, { id, actionName, description }) => {
@@ -655,7 +868,7 @@ if (!gotTheLock) {
       else if (ext === '.svg') mimeType = 'image/svg+xml';
       else if (ext === '.webp') mimeType = 'image/webp';
 
-      const data = getCachedFileData(filePath, mimeType);
+      const data = await getCachedFileData(filePath, mimeType);
       return { success: true, data };
     } catch (e: any) {
       return { success: false, error: e.message };
@@ -696,7 +909,7 @@ if (!gotTheLock) {
       else if (ext === '.m4a') mimeType = 'audio/mp4';
       else if (ext === '.webm') mimeType = 'audio/webm';
 
-      const data = getCachedFileData(filePath, mimeType);
+      const data = await getCachedFileData(filePath, mimeType);
       return { success: true, data };
     } catch (e: any) {
       return { success: false, error: e.message };
@@ -780,7 +993,7 @@ if (!gotTheLock) {
       else if (ext === '.m4a') mimeType = 'audio/mp4';
       else if (ext === '.webm') mimeType = 'audio/webm';
 
-      const data = getCachedFileData(filePath, mimeType);
+      const data = await getCachedFileData(filePath, mimeType);
       return { success: true, data };
     } catch (e: any) {
       return { success: false, error: e.message };
@@ -857,7 +1070,7 @@ if (!gotTheLock) {
       else if (ext === '.svg') mimeType = 'image/svg+xml';
       else if (ext === '.webp') mimeType = 'image/webp';
 
-      const data = getCachedFileData(filePath, mimeType);
+      const data = await getCachedFileData(filePath, mimeType);
       return { success: true, data };
     } catch (e: any) {
       return { success: false, error: e.message };
@@ -955,6 +1168,7 @@ if (!gotTheLock) {
       })
 
       if (canceled || !filePath) return { success: false, message: 'ABORTED' }
+      await checkpointDatabase()
       fs.copyFileSync(dbPath, filePath)
       return { success: true, filePath }
     } catch (error: any) {
@@ -999,6 +1213,30 @@ if (!gotTheLock) {
   ipcMain.handle('app-is-packaged', () => {
     return app.isPackaged
   })
+
+  ipcMain.handle('app-show-notification', (_event, { title, body }) => {
+    try {
+      const iconPath = join(__dirname, '../../resources/icon.png')
+      const notif = new (require('electron').Notification)({
+        title: title || 'STRATAGEM CHRONOS ALERT',
+        body: body || '',
+        icon: iconPath
+      })
+      notif.show()
+      return { success: true }
+    } catch (e: any) {
+      console.error('Failed to show native notification:', e)
+      return { success: false, error: e.message }
+    }
+  })
+
+  // Check for uninstaller backup argument
+  const backupFlagIndex = process.argv.indexOf('--uninstall-backup')
+  if (backupFlagIndex !== -1 && backupFlagIndex + 1 < process.argv.length) {
+    const backupDir = process.argv[backupFlagIndex + 1]
+    runUninstallBackup(backupDir)
+    return
+  }
 
   createWindow()
 
@@ -1128,7 +1366,7 @@ function setupWatchers(mainWindow: BrowserWindow) {
   const watchOptions = { persistent: false };
   let devTimeout: NodeJS.Timeout | null = null;
   // let nudityTimeout: NodeJS.Timeout | null = null;
-  // let notecardsTimeout: NodeJS.Timeout | null = null;
+  let notecardsTimeout: NodeJS.Timeout | null = null;
 
   const devDir = getDevImagesDir();
   if (fs.existsSync(devDir)) {
@@ -1163,19 +1401,19 @@ function setupWatchers(mainWindow: BrowserWindow) {
   //   }
   // }
 
-  // const notecardsDir = resolveAIGirlFolderPath('NoteCards/Cards');
-  // if (fs.existsSync(notecardsDir)) {
-  //   try {
-  //     fs.watch(notecardsDir, watchOptions, () => {
-  //       if (notecardsTimeout) clearTimeout(notecardsTimeout);
-  //       notecardsTimeout = setTimeout(() => {
-  //         if (!mainWindow.isDestroyed()) {
-  //           mainWindow.webContents.send('aigirl-refresh-asset');
-  //         }
-  //       }, 500);
-  //     });
-  //   } catch (e) {
-  //     console.warn('Failed to watch notecards dir:', e);
-  //   }
-  // }
+  const notecardsDir = resolveAIGirlFolderPath('NoteCards/Cards');
+  if (fs.existsSync(notecardsDir)) {
+    try {
+      fs.watch(notecardsDir, watchOptions, () => {
+        if (notecardsTimeout) clearTimeout(notecardsTimeout);
+        notecardsTimeout = setTimeout(() => {
+          if (!mainWindow.isDestroyed()) {
+            mainWindow.webContents.send('aigirl-refresh-asset');
+          }
+        }, 500);
+      });
+    } catch (e) {
+      console.warn('Failed to watch notecards dir:', e);
+    }
+  }
 }

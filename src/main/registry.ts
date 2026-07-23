@@ -1,14 +1,14 @@
 import { execSync } from 'child_process';
 
 /**
- * Read a string value from the HKCU\Software\Strategem 1.0 registry hive.
+ * Read a string value from the HKCU\Software\Stratagem 2.0 registry hive.
  * Falls back to `defaultValue` on any error or on non-Windows platforms.
  */
 export function getRegistryValue(valueName: string, defaultValue: string): string {
   if (process.platform !== 'win32') return defaultValue;
   try {
     const stdout = execSync(
-      `reg query "HKCU\\Software\\Strategem 1.0" /v "${valueName}"`,
+      `reg query "HKCU\\Software\\Stratagem 2.0" /v "${valueName}"`,
       { encoding: 'utf8', stdio: ['pipe', 'pipe', 'ignore'] }
     );
     const lines = stdout.split('\n');

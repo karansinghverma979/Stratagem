@@ -38,6 +38,14 @@ Version 2.0 introduces deep performance refactoring across the main process, dat
 * **Improvement:** Programmed active localStorage cleanup hooks into `deleteMission` and `purgeDatabase` inside `store.js`.
 * **Impact on Workability:** Deleting a task automatically cleans its associated subtask objectives from local storage, preventing orphaned keys from slowly bloating your browser disk space.
 
+### 🔴 Close-Transition Deferral (Zero Lag)
+* **Improvement:** Configured victory/abort confirmations inside `MissionProtocol.svelte` and mission additions inside `TaskForgeModal.svelte` to invoke the UI closing handlers (`onclose()` and `triggerClose()`) immediately, deferring the heavy SQLite database operations and store rebuilds by 50ms using a timeout.
+* **Impact on Workability:** Eliminates the stutter/hardness on clicking action buttons. The modals fade out instantly at a locked 60 FPS while the database writes execute silently in the background.
+
+### 🔴 Real-Time Assets Synchronization
+* **Improvement:** Activated directory watchers (`fs.watch`) on both `devImages` and `NoteCards/Cards` folders in the main process, bridging updates to Svelte components using CustomEvents.
+* **Impact on Workability:** Adding, editing, or deleting files in your OS explorer instantly synchronizes and refreshes the companion avatars and cards displayed in the application in real-time.
+
 ---
 
 ## 💾 2. DATABASE STATION IMPORT & EXPORT RELIABILITY

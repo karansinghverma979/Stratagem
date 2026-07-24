@@ -316,12 +316,31 @@ The `auditFlow` derived block was fully rebuilt to show exactly these entries in
 
 ---
 
+## 🎯 13. 3-STRIKE RESCHEDULE PROTOCOL & ARCHIVE BADGE SYSTEM
+
+### 🔴 3-Strike Reschedule Rule
+* **Max Reschedules**: Each task is granted a maximum of **2 reschedules (3 total deadline chances)**.
+* **Enforcement**: Database `updateMissionAsRescheduled` tracks `reschedule_count`. Once `reschedule_count >= 2`, further realignment is rejected.
+* **Breach Lockout**: In Breach Sector, when `rescheduleCount >= 2`, **REALIGN** button locks with:
+  `"RE-ALIGNMENT LOCKED: MAXIMUM RE-ALIGNMENT LIMIT REACHED (2/2 EXECUTED)"`
+
+### 🔴 Archive Reschedule Badges
+* **0 Reschedules (`rescheduleCount === 0`)**: Reschedule badge is **completely hidden**.
+* **1 Reschedule (`rescheduleCount === 1`)**: Displays **`RESCHEDULED`**.
+* **2 Reschedules (`rescheduleCount === 2`)**: Displays **`RESCHEDULED TWICE`** (if aborted/completed before 3rd deadline breach).
+
+### 🔴 Special 3rd Breach Abort Rule (NEGLECTED)
+* If a task reaches its 3rd deadline, breaches into `BREACH` state, and is aborted from Breach:
+  * Resolution Badge: Displays **`⚡ NEGLECTED`** with crimson alert styling.
+  * Reschedule Badge: Suppressed (subsumed into `⚡ NEGLECTED` badge).
+
+---
+
 ## 🚀 STRATAGEM 2.0 PRODUCTION RELEASE METADATA
 
 * **Release Tag:** `v2.0.0`
 * **Release Title:** `Stratagem 2.0: Cosmic Containment & Temporal Calibrator`
-* **Final Commit:** `de9b3ec` — `main` branch
-* **Files Changed (Full Session):** 27 files · 682 insertions · 199 deletions
+* **Final Commit:** `d938690` — `main` branch
 * **Build Output:** `dist/Stratagem-2.0.0-setup.exe`
 * **Typecheck Status:** ✅ 0 errors · 0 warnings
 
@@ -332,7 +351,8 @@ The `auditFlow` derived block was fully rebuilt to show exactly these entries in
 1. **⏱️ Chronos Sector & Unified Clock** — Tab order corrected, clock synchronization verified.
 2. **⚔️ Execution Sector & Subtasks** — Breathing highlight, Move Up/Down buttons, Victory/Abort patience loaders.
 3. **🛡️ Breach Sector** — Confined derivation, glassmorphic backdrop, priority badge cleanup, abort patience loader.
-4. **💾 Archive Sector** — `completed_at` DB column, disappearing task fix, null-safe filters, inclusive days spent.
-5. **⌨️ Win+M Shortcut** — IPC minimize channel registered end-to-end.
-6. **🔧 Installer & Branding** — Spelling corrected, Obsidian/Strategies default, no NoteCards on fresh install, compression & UAC fixes.
-7. **🕐 Kernel Audit Timeline** — UTC drift fixed, clean 6-date flow, durable `LAST_UPDATE` in SQLite.
+4. **💾 Archive Sector** — `completed_at` DB column, disappearing task fix, null-safe filters, inclusive days spent, RESCHEDULED / RESCHEDULED TWICE / NEGLECTED badge rules.
+5. **🎯 3-Strike Reschedule Protocol** — Locked after 2 reschedules, 3rd breach abort marked as `⚡ NEGLECTED`.
+6. **⌨️ Win+M Shortcut** — IPC minimize channel registered end-to-end.
+7. **🔧 Installer & Branding** — Spelling corrected, Obsidian/Strategies default, no NoteCards on fresh install, compression & UAC fixes.
+8. **🕐 Kernel Audit Timeline** — UTC drift fixed, clean 6-date flow, durable `LAST_UPDATE` in SQLite.

@@ -65,16 +65,15 @@
       stopwatchInterval = null;
     }
 
-    if (shouldRunHighFrequency) {
+    if (isRunning) {
+      if (stopwatchStartTime > 0) {
+        stopwatchElapsedBefore += (Date.now() - stopwatchStartTime);
+      }
       stopwatchStartTime = Date.now();
+      const delay = shouldRunHighFrequency ? 33 : 1000;
       stopwatchInterval = setInterval(() => {
         stopwatchTime = stopwatchElapsedBefore + (Date.now() - stopwatchStartTime);
-      }, 33); // 30 FPS for visual fluidity when tab is open
-    } else if (isRunning) {
-      stopwatchStartTime = Date.now();
-      stopwatchInterval = setInterval(() => {
-        stopwatchTime = stopwatchElapsedBefore + (Date.now() - stopwatchStartTime);
-      }, 1000); // 1 FPS in background to avoid CPU load
+      }, delay);
     }
 
     return () => {

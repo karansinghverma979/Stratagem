@@ -21,7 +21,7 @@
   import MementoPopup from './sectors/Genesis/GenesisMain/DeveloperPanel/MementoPopup.svelte';
   import ReasonPopup from './sectors/Genesis/GenesisMain/DeveloperPanel/ReasonPopup.svelte';
   import MentalSkillsPopup from './sectors/Genesis/GenesisMain/DeveloperPanel/MentalSkillsPopup.svelte';
-  import { AntaryamiState, syncAntaryami, breachedTasks, notifications, isTaskViewOpen, startAutoSync, stopAutoSync, stopTicker, isNeuralUplinkOpen, neuralUplinkLogs, loadNeuralUplinkLogs, activeStrategizeTask, onNoteSavedCallback, isPurgeModalOpen, taskToPurge, deleteMission, arsenalTasks, addNotification, currentSector as currentSectorStore } from './core/store';
+  import { AntaryamiState, syncAntaryami, breachedTasks, notifications, isTaskViewOpen, startAutoSync, stopAutoSync, isNeuralUplinkOpen, neuralUplinkLogs, loadNeuralUplinkLogs, activeStrategizeTask, onNoteSavedCallback, isPurgeModalOpen, taskToPurge, deleteMission, arsenalTasks, addNotification, currentSector as currentSectorStore } from './core/store';
   import { chronosStore } from './core/chronos-store';
   import { AudioEngine } from './core/audio-engine';
   import StrategizeModal from './sectors/Arsenal/ArsenalMain/StrategizeModal.svelte';
@@ -121,27 +121,27 @@
     if (mouseStopTimeout) clearTimeout(mouseStopTimeout);
     if (sixEyesDurationTimeout) clearTimeout(sixEyesDurationTimeout);
 
-    // Step 1: Trigger Satoru Gojo's Infinity effect at click location (runs for 2.0s)
     isInfinityRunning = true;
     AudioEngine.play('data-lock');
 
-    // Step 2: After 2 seconds of Infinity, transition to Hollow Purple (runs for 3.5s)
-    setTimeout(() => {
+    const t1 = setTimeout(() => {
       isInfinityRunning = false;
       isHollowPurpleRunning = true;
       AudioEngine.play('data-decode');
 
-      // Colliding sound cues (at 1.8s into Hollow Purple)
-      setTimeout(() => {
+      const t2 = setTimeout(() => {
         AudioEngine.play('success');
       }, 1800);
 
-      // Open the Cognitive Schemas panel after 3.5s
-      setTimeout(() => {
+      const t3 = setTimeout(() => {
         isHollowPurpleRunning = false;
         isMentalSkillsPopupOpen = true;
       }, 3500);
+
+      purpleTimeouts.push(t2, t3);
     }, 2000);
+
+    purpleTimeouts.push(t1);
   }
 
   function handleMouseMove(e: MouseEvent) {
@@ -508,9 +508,9 @@ Please execute the Recommended Realignment Path or authorize a purge.
 
   onDestroy(() => {
     stopAutoSync();
-    stopTicker();
     if (mouseStopTimeout) clearTimeout(mouseStopTimeout);
     if (sixEyesDurationTimeout) clearTimeout(sixEyesDurationTimeout);
+    purpleTimeouts.forEach(t => clearTimeout(t));
     window.removeEventListener('wheel', handleGlobalWheel);
     window.removeEventListener('click', handleGlobalClick);
     window.removeEventListener('keydown', handleGlobalKeyDown);

@@ -123,12 +123,13 @@
     }));
   }
 
-  onMount(async () => {
-    await loadImagesList();
-    resetAutoTimer();
+  onMount(() => {
+    loadImagesList().then(() => {
+      resetAutoTimer();
+    });
 
-    const handleRefresh = async () => {
-      await loadImagesList();
+    const handleRefresh = () => {
+      loadImagesList();
     };
     window.addEventListener('dev-refresh-asset', handleRefresh);
 

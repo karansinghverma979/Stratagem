@@ -10,8 +10,8 @@ export const AntaryamiState = writable({
   telemetryActive: true,
   aigirlFolderMode: 'random',
   aigirlNudityEnabled: false,
-  notecardsActiveSeconds: 0,
-  nudeModeRemainingSeconds: 0,
+  notecardsClickCount: 0,
+  nudeClicksRemaining: 0,
   appLaunchOnStartup: false,
   githubUrl: 'https://github.com/karansinghverma979/',
   emailAddress: 'karansinghverma979@gmail.com',
@@ -73,7 +73,6 @@ export function triggerHighlightTask(taskId) {
 
 let cachedMissions = [];
 let initialSyncDone = false;
-export let stopTicker = () => {};
 
 
 const storeCache = {
@@ -134,14 +133,14 @@ export function rebuildStoresFromCache(silent = false) {
         isOverdue = todayMidnight > dlMidnight;
       }
     }
-    const isFinalState = m.status === 'VICTORY' || m.status === 'ABORTED';
+    const isFinalState = m.status === 'VICTORY' || m.status === 'ABORTED' || m.status === 'ABORT';
     const derivedStatus = (!isFinalState && (m.status === 'BREACH' || (m.status === 'EXECUTION' && hasDeadline && isOverdue))) ? 'BREACH' : m.status;
 
     const resCount = m.reschedule_count !== undefined && m.reschedule_count !== null 
       ? Number(m.reschedule_count) 
       : (m.is_rescheduled ? 1 : 0);
 
-    const isNeglected = (derivedStatus === 'ABORTED' || m.status === 'ABORTED') && 
+    const isNeglected = (derivedStatus === 'ABORTED' || m.status === 'ABORTED' || m.status === 'ABORT') && 
       (dbClassifications.includes('NEGLECTED') || (m.classifications && m.classifications.includes('NEGLECTED')));
 
     const formattedMission = {
@@ -149,7 +148,7 @@ export function rebuildStoresFromCache(silent = false) {
       title: m.title,
       status: derivedStatus,
       priority: m.threat_level || 'MED',
-      tags: derivedStatus === 'VICTORY' || derivedStatus === 'ABORTED' ? ['HISTORICAL', ...dbClassifications] : ['#SYSTEM', ...dbClassifications],
+      tags: derivedStatus === 'VICTORY' || derivedStatus === 'ABORTED' || derivedStatus === 'ABORT' ? ['HISTORICAL', ...dbClassifications] : ['#SYSTEM', ...dbClassifications],
       countdown: m.temporal_boundary ? `T-MINUS ${m.temporal_boundary}` : 'NO DEADLINE',
       deadlineDate: m.temporal_boundary || '',
       initiateDate: initDateFormatted,
@@ -171,13 +170,14 @@ export function rebuildStoresFromCache(silent = false) {
       resolutionComment: m.resolution_comment || ''
     };
 
-    if (m.status === 'VICTORY' || m.status === 'ABORTED') {
+    if (m.status === 'VICTORY' || m.status === 'ABORTED' || m.status === 'ABORT') {
       archive.push(formattedMission);
-    } else if (!hasDeadline) {
+    } else if (m.status === 'RAW_INTEL' || m.status === 'SYNTHESIZING' || m.status === 'WEAPONIZED' || !hasDeadline) {
       arsenal.push(formattedMission);
 
-      const subStatus = m.status === 'SYNTHESIZING' ? 'SYNTHESIZING' : (m.status === 'WEAPONIZED' ? 'WEAPON' : 'RAW_INTEL');
-      const arsenalTag = subStatus === 'SYNTHESIZING' ? 'SYNTH' : (subStatus === 'WEAPONIZED' ? 'WEAPON' : 'RAW');
+      // Arsenal has two active categories: SYNTHESIZING and RAW_INTEL (legacy WEAPONIZED maps to SYNTHESIZING)
+      const isSynth = m.status === 'SYNTHESIZING' || m.status === 'WEAPONIZED';
+      const arsenalTag = isSynth ? 'SYNTH' : 'RAW';
       const arsenalObj = { 
         id: m.id, 
         title: m.title, 
@@ -186,10 +186,8 @@ export function rebuildStoresFromCache(silent = false) {
         createdAt: formattedMission.createdAt 
       };
       
-      if (subStatus === 'SYNTHESIZING') {
+      if (isSynth) {
         synth.push(arsenalObj);
-      } else if (subStatus === 'WEAPONIZED') {
-        weapon.push(arsenalObj);
       } else {
         rawIntel.push(arsenalObj);
       }
@@ -260,25 +258,34 @@ export async function syncAntaryami(silent = false) {
     
     const config = await window.stratagemAPI.getConfig();
     if (config) {
-      if (config.notecardsActiveSeconds !== undefined) {
-        config.notecardsActiveSeconds = parseInt(config.notecardsActiveSeconds || '0', 10);
-      }
-      
+      const notecardsClickCount = parseInt(config.notecardsClickCount || '0', 10);
+      const nudeClicksRemaining = parseInt(config.nudeClicksRemaining || '0', 10);
+      const aigirlNudityEnabled = config.aigirlNudityEnabled === true || config.aigirlNudityEnabled === 'true';
+
       const isPackaged = await window.stratagemAPI.isPackaged();
       const nudeBypassAllowed = await window.stratagemAPI.checkNudeBypass();
-      const activeSecs = config.notecardsActiveSeconds || 0;
-      const isUnlocked = activeSecs >= 21600 || (!isPackaged && nudeBypassAllowed);
-      
-      if (config.aigirlNudityEnabled) {
-        if (!isUnlocked) {
-          config.aigirlNudityEnabled = false;
+      const isUnlocked = notecardsClickCount >= 1440 || (!isPackaged && nudeBypassAllowed);
+
+      let finalNudityEnabled = aigirlNudityEnabled;
+      let finalNudeClicks = nudeClicksRemaining;
+
+      if (finalNudityEnabled) {
+        if (!isUnlocked || finalNudeClicks <= 0) {
+          finalNudityEnabled = false;
+          finalNudeClicks = 0;
           await window.stratagemAPI.setConfig('aigirlNudityEnabled', 'false');
-        } else {
-          config.nudeModeRemainingSeconds = 360;
         }
       }
-      
-      AntaryamiState.update(state => ({ ...state, ...config, isPackaged, nudeBypassAllowed }));
+
+      AntaryamiState.update(state => ({
+        ...state,
+        ...config,
+        aigirlNudityEnabled: finalNudityEnabled,
+        notecardsClickCount,
+        nudeClicksRemaining: finalNudeClicks,
+        isPackaged,
+        nudeBypassAllowed
+      }));
     }
 
     const missions = await window.stratagemAPI.fetchSectorMissions();
@@ -289,6 +296,61 @@ export async function syncAntaryami(silent = false) {
     console.log('[Antaryami] SQLite synchronization successfully concluded.');
   } catch (error) {
     console.error('[Antaryami] Matrix synchronization failed:', error);
+  }
+}
+
+export async function recordNoteCardsImageClick() {
+  if (typeof window === 'undefined' || !window.stratagemAPI) return;
+  let state;
+  AntaryamiState.subscribe(s => { state = s; })();
+  if (!state || state.aigirlNudityEnabled) return;
+
+  const currentCount = state.notecardsClickCount || 0;
+  if (currentCount < 1440) {
+    const newCount = currentCount + 1;
+    AntaryamiState.update(s => ({ ...s, notecardsClickCount: newCount }));
+    await window.stratagemAPI.setConfig('notecardsClickCount', newCount.toString());
+
+    if (newCount === 1440) {
+      AudioEngine.play('ping');
+      addNotification(
+        'NUDITY INTERFACE UNLOCKED',
+        'Target threshold reached (1,440 NoteCards clicks verified). Synthetic Companion Nudity Interface authorized!',
+        'success'
+      );
+    }
+  }
+}
+
+export async function recordNudityImageClick() {
+  if (typeof window === 'undefined' || !window.stratagemAPI) return;
+  let state;
+  AntaryamiState.subscribe(s => { state = s; })();
+  if (!state || !state.aigirlNudityEnabled) return;
+
+  const remaining = state.nudeClicksRemaining !== undefined && state.nudeClicksRemaining > 0 ? state.nudeClicksRemaining : 60;
+  if (remaining > 1) {
+    const newRemaining = remaining - 1;
+    AntaryamiState.update(s => ({ ...s, nudeClicksRemaining: newRemaining }));
+    await window.stratagemAPI.setConfig('nudeClicksRemaining', newRemaining.toString());
+  } else {
+    // 0 clicks remaining — Revert to NoteCards mode and reset count to 0
+    AntaryamiState.update(s => ({
+      ...s,
+      aigirlNudityEnabled: false,
+      notecardsClickCount: 0,
+      nudeClicksRemaining: 0
+    }));
+    await window.stratagemAPI.setConfig('aigirlNudityEnabled', 'false');
+    await window.stratagemAPI.setConfig('notecardsClickCount', '0');
+    await window.stratagemAPI.setConfig('nudeClicksRemaining', '0');
+
+    AudioEngine.play('fail');
+    addNotification(
+      'NUDITY QUOTA EXHAUSTED',
+      'All 60 Nudity image allocations consumed. Auto-reverted to NoteCards Mode.',
+      'error'
+    );
   }
 }
 
@@ -543,41 +605,56 @@ export function stopAutoSync() {
   }
 }
 
-// Background timer for NoteCards / Nude Mode gates
+// DevTools bypass helpers for NoteCards / Nude Mode gates
 if (typeof window !== 'undefined') {
-  // Developer test bypass helpers (run from DevTools console)
   window.unlockNudityMode = () => {
-    localStorage.setItem('aigirl_nude_test_bypass', 'true');
-    console.log('[DevTools] Nudity Mode bypass activated. Reloading...');
-    window.location.reload();
+    window.stratagemAPI.setConfig('notecardsClickCount', '1440').then(() => {
+      window.stratagemAPI.setConfig('nudeClicksRemaining', '60').then(() => {
+        AntaryamiState.update(s => ({
+          ...s,
+          notecardsClickCount: 1440,
+          nudeClicksRemaining: 60
+        }));
+        console.log('[DevTools] Nudity Mode unlocked (1,440 clicks set).');
+      });
+    });
   };
   window.lockNudityMode = () => {
-    localStorage.removeItem('aigirl_nude_test_bypass');
-    window.stratagemAPI.setConfig('notecardsActiveSeconds', '0').then(() => {
-      console.log('[DevTools] Nudity Mode bypass deactivated. Reloading...');
-      window.location.reload();
+    window.stratagemAPI.setConfig('notecardsClickCount', '0').then(() => {
+      window.stratagemAPI.setConfig('nudeClicksRemaining', '0').then(() => {
+        window.stratagemAPI.setConfig('aigirlNudityEnabled', 'false').then(() => {
+          AntaryamiState.update(s => ({
+            ...s,
+            aigirlNudityEnabled: false,
+            notecardsClickCount: 0,
+            nudeClicksRemaining: 0
+          }));
+          console.log('[DevTools] Nudity Mode locked.');
+        });
+      });
     });
   };
-  window.setNotecardsActiveSeconds = (seconds) => {
-    window.stratagemAPI.setConfig('notecardsActiveSeconds', seconds.toString()).then(() => {
-      AntaryamiState.update(s => ({ ...s, notecardsActiveSeconds: seconds }));
-      console.log(`[DevTools] Standard engagement time set to ${seconds} seconds.`);
+  window.setNotecardsClickCount = (count) => {
+    window.stratagemAPI.setConfig('notecardsClickCount', count.toString()).then(() => {
+      AntaryamiState.update(s => ({ ...s, notecardsClickCount: count }));
+      console.log(`[DevTools] NoteCards click count set to ${count}.`);
     });
   };
-  window.setNudeModeRemainingSeconds = (seconds) => {
-    AntaryamiState.update(s => ({ ...s, nudeModeRemainingSeconds: seconds }));
-    console.log(`[DevTools] Nudity mode countdown time set to ${seconds} seconds.`);
+  window.setNudeClicksRemaining = (count) => {
+    window.stratagemAPI.setConfig('nudeClicksRemaining', count.toString()).then(() => {
+      AntaryamiState.update(s => ({ ...s, nudeClicksRemaining: count }));
+      console.log(`[DevTools] Nude clicks remaining set to ${count}.`);
+    });
   };
 
   if (window.stratagemAPI) {
     window.stratagemAPI.isPackaged().then(packaged => {
       AntaryamiState.update(state => ({ ...state, isPackaged: packaged }));
       if (packaged) {
-        // Enforce strict security: delete the dev bypass triggers in production build
         delete window.unlockNudityMode;
         delete window.lockNudityMode;
-        delete window.setNotecardsActiveSeconds;
-        delete window.setNudeModeRemainingSeconds;
+        delete window.setNotecardsClickCount;
+        delete window.setNudeClicksRemaining;
       }
     }).catch(e => console.error(e));
 
@@ -585,121 +662,4 @@ if (typeof window !== 'undefined') {
       AntaryamiState.update(state => ({ ...state, nudeBypassAllowed: allowed }));
     }).catch(e => console.error(e));
   }
-
-  // ─── Persistent snapshot variables (filled once, read each tick) ──────────
-  // Using persistent subscriptions instead of subscribe-then-immediately-unsubscribe
-  // inside the interval, which was creating/destroying 3 closures every second.
-  let _tickerState = null;
-  let _tickerSector = 'Execution';
-  let _tickerGenTab = 'developer';
-
-  AntaryamiState.subscribe(s => { _tickerState = s; });
-  
-  currentSector.subscribe(v => {
-    if (_tickerSector === 'Genesis' && _tickerGenTab === 'aigirl' && v !== 'Genesis') {
-      if (_tickerState) {
-        window.stratagemAPI.setConfig('notecardsActiveSeconds', (_tickerState.notecardsActiveSeconds || 0).toString()).catch(e => console.error(e));
-      }
-    }
-    _tickerSector = v;
-  });
-
-  genesisActiveTab.subscribe(v => {
-    if (_tickerSector === 'Genesis' && _tickerGenTab === 'aigirl' && v !== 'aigirl') {
-      if (_tickerState) {
-        window.stratagemAPI.setConfig('notecardsActiveSeconds', (_tickerState.notecardsActiveSeconds || 0).toString()).catch(e => console.error(e));
-      }
-    }
-    _tickerGenTab = v;
-  });
-
-  // Transition listener: reacts when aigirlNudityEnabled flips
-  let lastNudityState = undefined;
-  AntaryamiState.subscribe(state => {
-    if (state.aigirlNudityEnabled !== lastNudityState) {
-      if (lastNudityState !== undefined) {
-        if (state.aigirlNudityEnabled) {
-          // false → true: Nude Mode activated — seed the countdown
-          window.stratagemAPI.setConfig('notecardsActiveSeconds', '0');
-          setTimeout(() => {
-            AntaryamiState.update(s => ({
-              ...s,
-              nudeModeRemainingSeconds: 360,
-              notecardsActiveSeconds: 0
-            }));
-          }, 0);
-        } else {
-          // true → false: toggled OFF or timed out
-          setTimeout(() => {
-            AntaryamiState.update(s => ({ ...s, nudeModeRemainingSeconds: 0 }));
-          }, 0);
-        }
-      }
-      lastNudityState = state.aigirlNudityEnabled;
-    }
-  });
-
-  // ─── 1-second ticker ─────────────────────────────────────────────────────
-  // Reads from persistent snapshot variables — zero subscription churn per tick.
-  let _tickerIntervalId = setInterval(() => {
-    if (!initialSyncDone) return;
-    const state = _tickerState;
-    if (!state) return;
-
-    if (state.aigirlNudityEnabled) {
-      // ── Nude Mode: count down ──────────────────────────────────────────
-      const remaining = state.nudeModeRemainingSeconds;
-
-      // Guard: if remaining is already 0 or negative, the transition listener
-      // has (or will have) disabled nude mode. Do NOT restart at 360 — that
-      // was the race condition that caused the timer to reset unexpectedly.
-      if (!remaining || remaining <= 0) return;
-
-      if (remaining > 1) {
-        AntaryamiState.update(s => ({ ...s, nudeModeRemainingSeconds: remaining - 1 }));
-      } else {
-        // Natural timeout: revert to NoteCards mode
-        AntaryamiState.update(s => ({
-          ...s,
-          aigirlNudityEnabled: false,
-          nudeModeRemainingSeconds: 0,
-          notecardsActiveSeconds: 0
-        }));
-        updateConfig('aigirlNudityEnabled', false);
-        window.stratagemAPI.setConfig('notecardsActiveSeconds', '0').catch(e => console.error(e));
-        AudioEngine.play('fail');
-        addNotification(
-          'NEURAL MODE TIMEOUT',
-          'Classification protocol duration exceeded. Auto-reverted to NoteCards Mode.',
-          'error'
-        );
-      }
-    } else {
-      // ── NoteCards Mode: increment only when actively on the AIGirl tab ─
-      if (_tickerSector === 'Genesis' && _tickerGenTab === 'aigirl') {
-        const activeSecs = (state.notecardsActiveSeconds || 0) + 1;
-        AntaryamiState.update(s => ({
-          ...s,
-          notecardsActiveSeconds: activeSecs,
-          nudeModeRemainingSeconds: 0
-        }));
-        // Persist to database every 10 seconds to avoid SQLite write thrashing
-        if (activeSecs % 10 === 0) {
-          window.stratagemAPI.setConfig('notecardsActiveSeconds', activeSecs.toString()).catch(e => console.error(e));
-        }
-      }
-    }
-  }, 1000);
-
-  stopTicker = () => {
-    if (_tickerIntervalId) {
-      clearInterval(_tickerIntervalId);
-      _tickerIntervalId = null;
-      console.log('[Antaryami] Background ticker stopped.');
-      if (_tickerState) {
-        const activeSecs = _tickerState.notecardsActiveSeconds || 0;
-        window.stratagemAPI.setConfig('notecardsActiveSeconds', activeSecs.toString()).catch(e => console.error(e));
-      }
-    }
-  };
 }

@@ -116,9 +116,10 @@ export function seedDatabase() {
 
       execData.forEach(item => {
         const deadline = new Date(now + item.days * oneDay).toISOString().split('T')[0];
+        const nowISO = new Date().toISOString();
         db.run(
-          `INSERT INTO missions (title, temporal_boundary, threat_level, status, classifications, initiated_at) VALUES (?, ?, ?, ?, ?, ?)`,
-          [item.title, deadline, item.threat, 'EXECUTION', item.tags, new Date().toISOString()],
+          `INSERT INTO missions (title, temporal_boundary, threat_level, status, classifications, initiated_at, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)`,
+          [item.title, deadline, item.threat, 'EXECUTION', item.tags, nowISO, nowISO],
           (err) => {
             if (rejected) return;
             if (err) {

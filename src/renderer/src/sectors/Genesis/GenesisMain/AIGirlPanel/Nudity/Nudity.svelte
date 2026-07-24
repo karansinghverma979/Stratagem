@@ -2,7 +2,7 @@
   import { onMount } from 'svelte';
   import { fade, fly, scale, blur } from 'svelte/transition';
   import { cubicOut } from 'svelte/easing';
-  import { AntaryamiState } from '../../../../../core/store';
+  import { AntaryamiState, recordNudityImageClick } from '../../../../../core/store';
 
   interface Props {
     currentEmote: string;
@@ -139,15 +139,18 @@
   }
 
   export async function triggerInteraction(e: MouseEvent) {
-    await loadNextImage();
+    const success = await loadNextImage();
+    if (success) {
+      recordNudityImageClick();
+    }
     await playNudityCustomSound();
     onCompanionClick(e);
   }
 
-  async function loadNextImage() {
+  async function loadNextImage(): Promise<boolean> {
     try {
       const scanRes = await window.stratagemAPI.aigirlScanFolderFiles('Nudity/assets');
-      if (!isMounted) return;
+      if (!isMounted) return false;
       let folderImages: string[] = [];
       if (scanRes.success && scanRes.files && scanRes.files.length > 0) {
         const imageExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.svg', '.webp'];
@@ -167,7 +170,7 @@
         localStorage.setItem('aigirl_nudity_filename', randomFile);
 
         const imgRes = await window.stratagemAPI.aigirlGetFileData('Nudity/assets', randomFile);
-        if (!isMounted) return;
+        if (!isMounted) return false;
         if (imgRes.success && imgRes.data) {
           activeImageBase64 = imgRes.data;
           onThemeChange(determineThemeFromFilename(randomFile));
@@ -179,14 +182,15 @@
           extractColorFromBase64(imgRes.data).then(rgb => {
             if (onColorChange && isMounted) onColorChange(rgb);
           });
-          return;
+          return true;
         }
       }
 
-      // Nothing to show — folder is empty or file failed to load
       console.warn('Nudity: no images found in folder.');
+      return false;
     } catch (e) {
       console.error('Nudity failed to load image:', e);
+      return false;
     }
   }
 

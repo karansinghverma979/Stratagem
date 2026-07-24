@@ -184,37 +184,23 @@
   }
 
   function formatDateToDDMMYYYYHHMM(dateStr: string): string {
-    if (!dateStr) return '03-06-2026 12:00';
-    let cleanStr = dateStr.trim();
-    
-    const matchSQLite = cleanStr.match(/^(\d{4})-(\d{2})-(\d{2})\s+(\d{2}):(\d{2}):(\d{2})$/);
-    if (matchSQLite) {
-      return `${matchSQLite[3]}-${matchSQLite[2]}-${matchSQLite[1]} ${matchSQLite[4]}:${matchSQLite[5]}`;
-    }
-    
-    const matchSQLiteShort = cleanStr.match(/^(\d{4})-(\d{2})-(\d{2})\s+(\d{2}):(\d{2})$/);
-    if (matchSQLiteShort) {
-      return `${matchSQLiteShort[3]}-${matchSQLiteShort[2]}-${matchSQLiteShort[1]} ${matchSQLiteShort[4]}:${matchSQLiteShort[5]}`;
-    }
-
+    if (!dateStr) return '';
+    const cleanStr = dateStr.trim();
     try {
-      const isoStr = cleanStr.includes(' ') && !cleanStr.includes('T') ? cleanStr.replace(' ', 'T') : cleanStr;
-      const d = new Date(isoStr);
-      if (isNaN(d.getTime())) {
-        const matchDDMMYYYYHHMM = cleanStr.match(/^(\d{2})-(\d{2})-(\d{4})\s+(\d{2}):(\d{2})$/);
-        if (matchDDMMYYYYHHMM) {
-          return cleanStr;
-        }
-        return '03-06-2026 12:00';
+      let isoStr = cleanStr;
+      if (/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}/.test(cleanStr) && !cleanStr.includes('Z') && !cleanStr.includes('+')) {
+        isoStr = cleanStr.replace(' ', 'T') + 'Z';
       }
+      const d = new Date(isoStr);
+      if (isNaN(d.getTime())) return cleanStr;
       const day = String(d.getDate()).padStart(2, '0');
       const month = String(d.getMonth() + 1).padStart(2, '0');
       const year = d.getFullYear();
       const hours = String(d.getHours()).padStart(2, '0');
       const minutes = String(d.getMinutes()).padStart(2, '0');
       return `${day}-${month}-${year} ${hours}:${minutes}`;
-    } catch (e) {
-      return '03-06-2026 12:00';
+    } catch {
+      return cleanStr;
     }
   }
 

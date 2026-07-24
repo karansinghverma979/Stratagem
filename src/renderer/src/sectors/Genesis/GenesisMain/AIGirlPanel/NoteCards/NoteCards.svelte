@@ -7,7 +7,7 @@
   import { fade, fly, scale, blur } from 'svelte/transition';
   import { cubicOut } from 'svelte/easing';
   import { AudioEngine } from '../../../../../core/audio-engine';
-  import { AntaryamiState } from '../../../../../core/store';
+  import { AntaryamiState, recordNoteCardsImageClick } from '../../../../../core/store';
 
   interface Props {
     currentEmote: string;
@@ -123,12 +123,15 @@
   }
 
   export async function triggerInteraction(e: MouseEvent) {
-    await loadNextImage();
+    const success = await loadNextImage();
+    if (success) {
+      recordNoteCardsImageClick();
+    }
     playSystemSound();
     onCompanionClick(e);
   }
 
-  async function loadNextImage() {
+  async function loadNextImage(): Promise<boolean> {
     try {
       const scanRes = await window.stratagemAPI.aigirlScanFolderFiles('NoteCards/Cards');
       let folderImages: string[] = [];
@@ -161,14 +164,15 @@
           extractColorFromBase64(imgRes.data).then(rgb => {
             if (onColorChange) onColorChange(rgb);
           });
-          return;
+          return true;
         }
       }
 
-      // Nothing to show — NoteCards folder is empty or file failed to load
       console.warn('NoteCards: no images found in folder.');
+      return false;
     } catch (e) {
       console.error('NoteCards failed to load image:', e);
+      return false;
     }
   }
 

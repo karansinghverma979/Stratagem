@@ -3,7 +3,7 @@
   import { fade, fly } from 'svelte/transition';
   import { quintOut } from 'svelte/easing';
   import { AudioEngine } from '../core/audio-engine';
-  import { executionTasks, breachedTasks, archivedTasks } from '../core/store';
+  import { executionTasks, breachedTasks, archivedTasks, triggerHighlightTask } from '../core/store';
 
   let { isOpen = $bindable(false), onsectorchange } = $props();
 
@@ -87,7 +87,9 @@
       onsectorchange(action.sector);
     } else if (action.type === 'MISSION') {
       onsectorchange(action.sector);
-      // Future: highlight mission
+      if (action.id) {
+        triggerHighlightTask(action.id);
+      }
     }
     isOpen = false;
   };

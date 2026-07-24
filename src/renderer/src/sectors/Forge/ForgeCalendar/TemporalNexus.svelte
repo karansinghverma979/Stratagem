@@ -4,7 +4,7 @@
   import { quintOut, backOut } from 'svelte/easing';
   import { AudioEngine } from '../../../core/audio-engine';
 
-  let { isOpen = false, onclose, onconfirm } = $props();
+  let { isOpen = false, initialDate = '', onclose, onconfirm } = $props();
 
   const monthsList = [
     'JANUARY', 'FEBRUARY', 'MARCH', 'APRIL', 'MAY', 'JUNE',
@@ -16,6 +16,17 @@
   let viewingYear = $state(currentDate.getFullYear());
   let viewingMonth = $state(currentDate.getMonth());
   let selectedDate = $state(new Date());
+
+  $effect(() => {
+    if (isOpen && initialDate) {
+      const parsed = new Date(initialDate);
+      if (!isNaN(parsed.getTime())) {
+        viewingYear = parsed.getFullYear();
+        viewingMonth = parsed.getMonth();
+        selectedDate = parsed;
+      }
+    }
+  });
 
   let isMonthDropdownOpen = $state(false);
   let isYearDropdownOpen = $state(false);

@@ -325,7 +325,27 @@ if (!gotTheLock) {
     electronApp.setAppUserModelId('com.stratagem.n0furnace')
 
     // Window control listeners
-    ipcMain.on('window-close', () => app.quit())
+    ipcMain.on('window-close', async () => {
+      try {
+        await checkpointDatabase()
+      } catch (e) {
+        console.error('[App Exit] DB checkpoint error:', e)
+      }
+      app.quit()
+    })
+
+    app.on('window-all-closed', () => {
+      if (process.platform !== 'darwin') {
+        app.quit()
+      }
+    })
+
+    app.on('before-quit', async () => {
+      try {
+        await checkpointDatabase()
+      } catch (e) {}
+    })
+
     ipcMain.on('window-minimize', () => {
       if (mainWindow) mainWindow.minimize()
     })

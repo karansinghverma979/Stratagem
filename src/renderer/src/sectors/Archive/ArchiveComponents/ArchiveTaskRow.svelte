@@ -32,14 +32,17 @@
   const handleMouseEnter = () => { isHovered = true; AudioEngine.play('ui-hover'); };
   const handleMouseLeave = () => { isHovered = false; };
 
-  // Resolved date
+  // Resolved date - parse YYYY-MM-DD as local year, month, day to prevent 1-day UTC shift
   let displayDate = $derived.by(() => {
     const raw = task.completionDate || task.createdAt || '';
-    const m = raw.match(/(\d{4}-\d{2}-\d{2})/);
+    const m = raw.match(/^(\d{4})-(\d{2})-(\d{2})/);
     if (m) {
-      const parsed = Date.parse(m[1]);
-      if (!isNaN(parsed)) {
-        return new Date(parsed).toLocaleDateString(undefined, {
+      const year = parseInt(m[1], 10);
+      const month = parseInt(m[2], 10) - 1;
+      const day = parseInt(m[3], 10);
+      const localDate = new Date(year, month, day);
+      if (!isNaN(localDate.getTime())) {
+        return localDate.toLocaleDateString(undefined, {
           month: 'short', day: 'numeric', year: 'numeric'
         }).toUpperCase();
       }

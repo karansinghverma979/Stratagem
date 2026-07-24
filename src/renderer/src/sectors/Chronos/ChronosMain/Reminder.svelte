@@ -44,7 +44,6 @@
     }
   });
   let globalMute = $state(false);
-  let alarmInterval = $state<any>(null);
   let alarmShownAt = $state<number>(0);
   let highlightedReminderId = $state('');
   let highlightedTemplateIdx = $state(-1);

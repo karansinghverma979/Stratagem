@@ -452,6 +452,8 @@
   let routingStatus = $derived(isRescheduleMode ? (deadline ? 'EXECUTION' : 'BREACH') : (deadline ? 'EXECUTION' : 'ARSENAL'));
 
   const initiateMission = async () => {
+    if (isProcessing) return;
+
     if (!missionDesignation.trim()) {
       validationError = 'VALID DESIGNATION REQUIRED';
       playAudio('fail');
@@ -1340,6 +1342,7 @@
 
   <TemporalNexus
     isOpen={isNexusOpen}
+    initialDate={deadline}
     onclose={() => isNexusOpen = false}
     onconfirm={(date) => {
       deadline = date;

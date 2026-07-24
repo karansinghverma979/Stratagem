@@ -28,13 +28,10 @@
   // Header hover state
   let isHeaderHovered = $state(false);
 
-  // Nude mode unlock and remaining time derivation (includes local testing bypass via localStorage)
+  // Nude mode unlock derivation (includes local testing bypass)
   const isNudeModeUnlocked = $derived(
-    ($AntaryamiState.notecardsActiveSeconds || 0) >= 21600 ||
-    (!$AntaryamiState.isPackaged && (
-      $AntaryamiState.nudeBypassAllowed ||
-      (typeof localStorage !== 'undefined' && localStorage.getItem('aigirl_nude_test_bypass') === 'true')
-    ))
+    ($AntaryamiState.notecardsClickCount || 0) >= 1440 ||
+    (!$AntaryamiState.isPackaged && $AntaryamiState.nudeBypassAllowed)
   );
 
   function formatTime(seconds: number): string {
@@ -245,25 +242,25 @@
         />
         {#if $AntaryamiState.aigirlNudityEnabled}
           <span class="timer-countdown font-mono text-danger animate-pulse">
-            LIMIT: {formatTime($AntaryamiState.nudeModeRemainingSeconds || 0)}
+            QUOTA: {$AntaryamiState.nudeClicksRemaining || 0} / 60 CLICKS
           </span>
         {:else if !isNudeModeUnlocked}
           <span class="unlock-progress font-mono text-warning">
-            LOCKED: {formatTime($AntaryamiState.notecardsActiveSeconds || 0)} / 360:00
+            LOCKED: {$AntaryamiState.notecardsClickCount || 0} / 1,440 CLICKS
           </span>
         {:else}
           <span class="unlock-progress font-mono text-success">
-            UNLOCKED
+            UNLOCKED (1,440/1,440 CLICKS)
           </span>
         {/if}
       </div>
       <p class="card-caption">
         {#if $AntaryamiState.aigirlNudityEnabled}
-          Classified Nudity telemetry active. Auto-reversion in {formatTime($AntaryamiState.nudeModeRemainingSeconds || 0)}.
+          Classified Nudity interface active. {$AntaryamiState.nudeClicksRemaining || 0} image allocations remaining before auto-reversion.
         {:else if !isNudeModeUnlocked}
-          Requires 360 mins of standard companion NoteCards engagement to authorize (Current: {formatTime($AntaryamiState.notecardsActiveSeconds || 0)} / 360:00).
+          Requires 1,440 standard NoteCards image clicks to authorize (Current progress: {$AntaryamiState.notecardsClickCount || 0} / 1,440 clicks).
         {:else}
-          Tactical authorization verified. Companion nudity interface is ready for activation.
+          Tactical authorization verified. Companion Nudity interface is ready for activation (60 image allocations quota).
         {/if}
       </p>
     </div>

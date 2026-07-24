@@ -43,7 +43,7 @@ graph TD
 
 ### 🖥️ Electron Framework (The Hardware Wrapper)
 * **Frameless Native Canvas**: Electron is configured with a frameless, non-resizable kiosk-ready window wrapper. Drag regions (`-webkit-app-region: drag`) are custom-mapped around headers to support native dragging while inputs bypass drag capture.
-* **Registry Integration**: Exposes native access to Windows Registry paths (`HKCU\Software\Strategem 1.0`). Electron queries these keys on boot to mount SQLite database filepaths (`DatabasePath`) dynamically.
+* **Registry Integration**: Exposes native access to Windows Registry paths (`HKCU\Software\Stratagem 2.0`). Electron queries these keys on boot to mount SQLite database filepaths (`DatabasePath`) dynamically.
 * **Shell Integration**: Links the frontend UI directly to the OS shell (`shell.showItemInFolder`) to open database folders in Windows Explorer.
 
 ### ⚡ Svelte 5 Compiler (The UI Engine)

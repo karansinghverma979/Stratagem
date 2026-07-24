@@ -72,7 +72,7 @@
 ---
 
 ## 🚀 RELEASE INSTRUCTIONS
-1. Deploy `dist/Stratagem-2.0.0-setup.exe` to GitHub Release Assets.
+1. Deploy `dist/Stratagem-2.3.0-setup.exe` to GitHub Release Assets.
 2. Attach `Stratagem Latest.md` release notes to the release tagged `v2.3` / `v2.0-latest`.
 
 ---

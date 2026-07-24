@@ -25,6 +25,7 @@
   // Shared metrics states (bound to children and rendered in LeftSide)
   let focusSessionCount = $state(0);
   let todoItems = $state<{ id: string; text: string; done: boolean; editing: boolean }[]>([]);
+  let todoItemsInitialized = $state(false); // guard: prevent $effect from overwriting before onMount loads
   let savedLists = $state<{ id: string; title: string; items: { text: string; done: boolean }[] }[]>([]);
   let remindersList = $state<{ id: string; text: string; targetTime: number; triggered: boolean; muted: boolean; scheduler?: any }[]>([]);
   let dispatchedReminders = $state<{ id: string; text: string; targetTime: number; acknowledged: boolean }[]>([]);
@@ -335,8 +336,12 @@
     addLog(`MODULE SWAP: ${feature.toUpperCase()} PORT DEPLOYED`);
   };
 
-  // Auto-save todoItems to localStorage whenever changed
+  // Auto-save todoItems to localStorage whenever changed.
+  // Guard: only run AFTER onMount has loaded the saved items.
+  // Without this, $effect fires immediately on mount with the initial []
+  // and overwrites localStorage before onMount can restore the saved list.
   $effect(() => {
+    if (!todoItemsInitialized) return;
     localStorage.setItem('chronos_active_todo_items', JSON.stringify(todoItems));
   });
 
@@ -352,6 +357,10 @@
       }
     } catch (e) {
       console.error('Failed to parse chronos_active_todo_items:', e);
+    } finally {
+      // Mark as initialized AFTER loading — from this point the $effect
+      // is allowed to write back to localStorage on any future change.
+      todoItemsInitialized = true;
     }
     
     

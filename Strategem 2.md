@@ -243,3 +243,96 @@ The app logo has been completely redesigned for a massive taskbar and desktop pr
 
 5. **⌨️ Shortcuts & App Kiosk Controls:**
    - Integrated `Win+M` hotkey captures in Svelte and registered the corresponding `window-minimize` main process IPC channel to minimize the frameless app smoothly.
+
+6. **🔧 Installer & Branding Fixes:**
+   - Fixed all `Strategem` → `Stratagem` spelling errors across `installer.nsh`, `registry.ts`, and default folder paths.
+   - Default Strategies vault path corrected to `$PROFILE\Obsidian\Strategies`.
+   - NoteCards no longer seeded on fresh install — app opens with a clean empty NoteCards collection.
+   - Added `compression: maximum` and `requestedExecutionLevel: asInvoker` to suppress UAC prompts.
+
+7. **🕐 Kernel Audit Timeline — UTC Date Fix:**
+   - Fixed UTC timezone drift in all audit timestamps (was showing ±5:30 hrs off due to SQLite `CURRENT_TIMESTAMP` mis-parsed as local time).
+   - Rebuilt the audit flow to show exactly 6 clean entries: **Created At**, **Initiated At**, **Rescheduled At**, **Rescheduled Again At**, **Last Update At**, **Victory At / Aborted At**.
+   - `Last Update At` is now persisted to the SQLite `audit_log` table (durable) instead of volatile `localStorage`.
+
+---
+
+## 🔧 11. INSTALLER & BRANDING CORRECTIONS
+
+### 🔴 Spelling Fix: Strategem → Stratagem
+* **Files corrected:** `build/installer.nsh`, `src/main/registry.ts`
+* **Scope:** All default folder paths, Windows Registry keys (`HKCU\Software\Stratagem 2.0`), and dialog labels now use the correct spelling **Stratagem** throughout.
+
+### 🔴 Default Path Corrections
+* **Strategies Vault:** Changed default from `$PROFILE\Strategies` → `$PROFILE\Obsidian\Strategies` in both `installer.nsh` and `src/main/index.ts` fallback, matching the standard Obsidian vault location.
+* **Dev Images:** Fixed from `$PROFILE\Strategem\DeveloperImages` → `$PROFILE\Stratagem\DeveloperImages`.
+* **NoteCards:** Fixed from `$PROFILE\Strategem\NoteCards` → `$PROFILE\Stratagem\NoteCards`.
+
+### 🔴 Clean First-Launch Database
+* **Removed** the `ensureDirectoryPopulated` seeding call for `NoteCards/Cards` in `syncDefaultAssets()` inside `src/main/index.ts`.
+* **On first install:** App now opens with an **empty NoteCards collection**, empty SQLite database, pre-filled dev portraits (devImages), pre-filled nudity assets and sound effects.
+* **NoteCards folder** is created empty — ready for the user to populate themselves.
+
+### 🔴 Installer Performance & Metadata
+* **`compression: maximum`** added at root level in `electron-builder.yml` — produces a smaller, faster-loading NSIS setup package.
+* **`requestedExecutionLevel: asInvoker`** added under `win:` — prevents Windows from showing a UAC elevation prompt on every launch, removing one layer of friction.
+* **`copyright`** field added: `Copyright © 2025 Karan Singh Verma`.
+
+---
+
+## 🕐 12. KERNEL AUDIT TIMELINE — PRECISION DATE SYSTEM
+
+### 🔴 Root Cause: UTC Timezone Drift
+* **The Bug:** SQLite's `DEFAULT CURRENT_TIMESTAMP` stores plain UTC text (`2026-07-24 04:31:49`) without timezone markers. JavaScript's `new Date("2026-07-24 04:31:49")` treated this as **local time** (not UTC), causing all audit timestamps to display **5 hours 30 minutes off** for IST users.
+* ISO strings written by `new Date().toISOString()` (`2026-07-24T04:31:49.000Z`) were parsed differently, creating inconsistent-looking dates across entries on the same task.
+
+### 🔴 Fix 1 — `database.js` · `appendAuditLog`
+* All audit entries now write an **explicit `new Date().toISOString()`** as `logged_at` instead of relying on `DEFAULT CURRENT_TIMESTAMP`.
+* Format guaranteed: `2026-07-24T04:31:49.000Z` — UTC ISO, parsed correctly in any timezone.
+
+### 🔴 Fix 2 — `database.js` · `insertMission`
+* `created_at` now explicitly written as `new Date().toISOString()` at row insertion, eliminating SQLite default drift for the mission creation timestamp.
+
+### 🔴 Fix 3 — `MissionProtocol.svelte` · `formatDateToDDMMYYYYHHMM`
+* Detects plain SQLite-style strings (`YYYY-MM-DD HH:MM:SS`, no timezone) and appends `Z` before parsing → forces UTC interpretation → displays correct local time.
+* ISO strings already ending in `Z` are parsed correctly without modification.
+
+### 🔴 Fix 4 — Clean 6-Date Audit Flow
+The `auditFlow` derived block was fully rebuilt to show exactly these entries in order:
+
+| # | Label | Audit Action Source |
+|---|-------|-------------------|
+| 1 | **Created At** | `INITIALIZE_CORE` log (explicit ISO) |
+| 2 | **Initiated At** | `TEMPORAL_ALIGNMENT` log |
+| 3 | **Rescheduled At** | First `TEMPORAL_REALIGNMENT` log |
+| 4 | **Rescheduled Again At** | Each additional `TEMPORAL_REALIGNMENT` (one row per reschedule) |
+| 5 | **Last Update At** | `LAST_UPDATE` audit log entry |
+| 6 | **Victory At / Aborted At** | `STATUS_UPDATE` / `DEBRIEF_SUBMISSION` log |
+
+### 🔴 Fix 5 — Durable `Last Update At`
+* Previously stored only in `localStorage` (volatile — lost on reinstall or browser storage clear).
+* Now written to **SQLite `audit_log`** table with action `LAST_UPDATE` when subtask objectives are saved on modal close.
+* `localStorage` retained as a fast local cache for immediate same-session re-open.
+
+---
+
+## 🚀 STRATAGEM 2.0 PRODUCTION RELEASE METADATA
+
+* **Release Tag:** `v2.0.0`
+* **Release Title:** `Stratagem 2.0: Cosmic Containment & Temporal Calibrator`
+* **Final Commit:** `de9b3ec` — `main` branch
+* **Files Changed (Full Session):** 27 files · 682 insertions · 199 deletions
+* **Build Output:** `dist/Stratagem-2.0.0-setup.exe`
+* **Typecheck Status:** ✅ 0 errors · 0 warnings
+
+> **ATTENTION COMMAND OPERATOR:** This marks the deployment of the official production release **v2.0.0** of the **Stratagem Neural Command Terminal**. All system sectors have been fully synchronized, audited, corrected, and locked for kiosk execution. The neural command grid is online.
+
+### 🌌 DEPLOYED SUB-LINK UPGRADES & TACTICAL LOGS
+
+1. **⏱️ Chronos Sector & Unified Clock** — Tab order corrected, clock synchronization verified.
+2. **⚔️ Execution Sector & Subtasks** — Breathing highlight, Move Up/Down buttons, Victory/Abort patience loaders.
+3. **🛡️ Breach Sector** — Confined derivation, glassmorphic backdrop, priority badge cleanup, abort patience loader.
+4. **💾 Archive Sector** — `completed_at` DB column, disappearing task fix, null-safe filters, inclusive days spent.
+5. **⌨️ Win+M Shortcut** — IPC minimize channel registered end-to-end.
+6. **🔧 Installer & Branding** — Spelling corrected, Obsidian/Strategies default, no NoteCards on fresh install, compression & UAC fixes.
+7. **🕐 Kernel Audit Timeline** — UTC drift fixed, clean 6-date flow, durable `LAST_UPDATE` in SQLite.

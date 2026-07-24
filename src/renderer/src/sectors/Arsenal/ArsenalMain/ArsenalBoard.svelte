@@ -334,7 +334,7 @@
                         task={mission}
                         onprotocolclick={handleTaskSelect}
                         searchQuery={searchVal}
-                        clickable={false}
+                        clickable={true}
                         onstrategize={handleStrategize}
                         coolingState={coolingStates[mission.id]}
                         onInitiateTransfer={() => initiateCooling(mission.id)}

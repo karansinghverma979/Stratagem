@@ -503,6 +503,10 @@
 
   const handleClose = () => {
     AudioEngine.play('ui-click');
+    if (editBuffer !== rawText) {
+      const confirmClose = confirm("WARNING: DISCARD UNSAVED TACTICAL STRATEGY?");
+      if (!confirmClose) return;
+    }
     onClose();
   };
 

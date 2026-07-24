@@ -22,14 +22,13 @@
   let offset = $derived(565.48 - (timeLeft / 60) * 565.48);
 
   $effect(() => {
-    console.log('DEBUG: AbortConfirmation isOpen status is:', props.isOpen);
     if (props.isOpen) {
       timeLeft = 60;
       comments = '';
       isConfirmed = false;
       AudioEngine.play('critical_breach');
 
-      timerInterval = setInterval(() => {
+      const interval = setInterval(() => {
         if (timeLeft > 0) {
           timeLeft--;
           if (timeLeft <= 10) {
@@ -37,21 +36,18 @@
           } else {
             AudioEngine.play('click');
           }
-        } else {
-          clearInterval(timerInterval);
         }
       }, 1000);
-    } else {
-      if (timerInterval) {
-        clearInterval(timerInterval);
-      }
+
+      return () => {
+        clearInterval(interval);
+      };
     }
+    return () => {};
   });
 
   onDestroy(() => {
-    if (timerInterval) {
-      clearInterval(timerInterval);
-    }
+    // interval is already auto-cleaned up by the effect callback on destroy
   });
 
   function handleAuthorize() {

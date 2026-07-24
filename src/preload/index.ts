@@ -55,11 +55,13 @@ const stratagemAPI = {
   devUploadImage: () => ipcRenderer.invoke('dev-upload-image'),
   devGetImageData: (fileName: string) => ipcRenderer.invoke('dev-get-image-data', fileName),
   checkNudeBypass: () => ipcRenderer.invoke('app-check-nude-bypass'),
-  isPackaged: () => ipcRenderer.invoke('app-is-packaged')
+  isPackaged: () => ipcRenderer.invoke('app-is-packaged'),
+  showNotification: (title: string, body: string) => ipcRenderer.invoke('app-show-notification', { title, body })
 }
 
 const osAPI = {
   closeWindow: () => ipcRenderer.send('window-close'),
+  minimizeWindow: () => ipcRenderer.send('window-minimize'),
   toggleMaximize: () => ipcRenderer.send('window-toggle-maximize'),
   exportDatabase: () => ipcRenderer.invoke('dialog:exportDB'),
   importDatabase: () => ipcRenderer.invoke('dialog:importDB'),

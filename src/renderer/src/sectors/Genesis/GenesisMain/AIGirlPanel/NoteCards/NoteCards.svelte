@@ -220,6 +220,30 @@
 
   onMount(() => {
     loadInitial();
+
+    const handleRefresh = async () => {
+      console.log("[NoteCards] Folder change event received. Refreshing active image...");
+      try {
+        const scanRes = await window.stratagemAPI.aigirlScanFolderFiles('NoteCards/Cards');
+        if (scanRes.success && scanRes.files) {
+          if (currentFileName && scanRes.files.includes(currentFileName)) {
+            const imgRes = await window.stratagemAPI.aigirlGetFileData('NoteCards/Cards', currentFileName);
+            if (imgRes.success && imgRes.data) {
+              activeImageBase64 = imgRes.data;
+              return;
+            }
+          }
+        }
+      } catch (e) {
+        console.warn('NoteCards folder refresh failed:', e);
+      }
+      await loadInitial();
+    };
+
+    window.addEventListener('aigirl-refresh-asset', handleRefresh);
+    return () => {
+      window.removeEventListener('aigirl-refresh-asset', handleRefresh);
+    };
   });
 </script>
 

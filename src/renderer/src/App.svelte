@@ -461,6 +461,13 @@ Please execute the Recommended Realignment Path or authorize a purge.
         loadNeuralUplinkLogs();
       }
     }
+
+    // Check for Win+M shortcut to minimize the application (metaKey corresponds to the OS/Super/Windows key)
+    if (e.metaKey && (e.code === 'KeyM' || e.key.toLowerCase() === 'm')) {
+      e.preventDefault();
+      AudioEngine.play('data-lock');
+      window.osAPI.minimizeWindow();
+    }
   }
 
   async function confirmSynthPurge() {
@@ -679,48 +686,57 @@ Please execute the Recommended Realignment Path or authorize a purge.
     <TopNavigation bind:currentSector={currentSector} onlogoclick={() => isHubOpen = true} hasBreached={$breachedTasks.length > 0} />
 
     <main class="main-viewport" class:system-suspended={isAnyRootModalActive} style:display={isAnyRootModalActive ? 'none' : 'flex'} in:fade={{ delay: 100, duration: 250 }}>
-      <!-- Keep all sectors alive to preserve local variables, scroll positions, and modal states -->
-      <div class="sector-wrapper" style:display={currentSector === 'Execution' ? 'flex' : 'none'}>
-        <ExecutionSector />
-      </div>
+      {#if currentSector === 'Execution'}
+        <div class="sector-wrapper" style:display="flex">
+          <ExecutionSector />
+        </div>
+      {/if}
 
-      <div class="sector-wrapper" style:display={currentSector === 'Chronos' ? 'flex' : 'none'}>
-        <ChronosSector />
-      </div>
+      {#if currentSector === 'Chronos'}
+        <div class="sector-wrapper" style:display="flex">
+          <ChronosSector />
+        </div>
+      {/if}
 
-      <div class="sector-wrapper" style:display={currentSector === 'Genesis' ? 'flex' : 'none'}>
-        {#if currentSector === 'Genesis'}
+      {#if currentSector === 'Genesis'}
+        <div class="sector-wrapper" style:display="flex">
           <GenesisSector />
-        {/if}
-      </div>
+        </div>
+      {/if}
 
-      <div class="sector-wrapper" style:display={currentSector === 'Breach' ? 'flex' : 'none'}>
-        <BreachSector 
-          onopenreschedule={(task) => {
-            forgeInitialTask = task;
-            isRescheduleMode = true;
-            isForgeOpen = true;
-          }}
-        />
-      </div>
+      {#if currentSector === 'Breach'}
+        <div class="sector-wrapper" style:display="flex">
+          <BreachSector 
+            onopenreschedule={(task) => {
+              forgeInitialTask = task;
+              isRescheduleMode = true;
+              isForgeOpen = true;
+            }}
+          />
+        </div>
+      {/if}
 
-      <div class="sector-wrapper" style:display={currentSector === 'Arsenal' ? 'flex' : 'none'}>
-        <ArsenalBoard 
-          onweaponize={(card) => {
-            forgeInitialTask = card;
-            forgeInitialDesignation = card.title;
-            isForgeOpen = true;
-          }}
-          onopenforge={(task) => {
-            forgeInitialTask = task;
-            isForgeOpen = true;
-          }}
-        />
-      </div>
+      {#if currentSector === 'Arsenal'}
+        <div class="sector-wrapper" style:display="flex">
+          <ArsenalBoard 
+            onweaponize={(card) => {
+              forgeInitialTask = card;
+              forgeInitialDesignation = card.title;
+              isForgeOpen = true;
+            }}
+            onopenforge={(task) => {
+              forgeInitialTask = task;
+              isForgeOpen = true;
+            }}
+          />
+        </div>
+      {/if}
 
-      <div class="sector-wrapper" style:display={currentSector === 'Archive' ? 'flex' : 'none'}>
-        <ArchiveSector />
-      </div>
+      {#if currentSector === 'Archive'}
+        <div class="sector-wrapper" style:display="flex">
+          <ArchiveSector />
+        </div>
+      {/if}
 
       <!-- Other sector stubs display a subtle maintenance panel -->
       {#if !['Execution', 'Chronos', 'Genesis', 'Breach', 'Arsenal', 'Archive'].includes(currentSector)}

@@ -53,7 +53,7 @@
     if (searchVal.trim() !== '') {
       const q = searchVal.toLowerCase().replace('#', '');
       list = list.filter(t =>
-        t.title.toLowerCase().includes(q) ||
+        (t.title || '').toLowerCase().includes(q) ||
         (t.tags || []).some((tag: string) => tag.toLowerCase().replace('#', '').includes(q)) ||
         (t.classifications || []).some((tag: string) => tag.toLowerCase().replace('#', '').includes(q))
       );
@@ -75,11 +75,11 @@
       if (activeSort === 'By Resolution Date') {
         const aD = a.completionDate || a.createdAt || '';
         const bD = b.completionDate || b.createdAt || '';
-        cmp = aD.localeCompare(bD);
+        cmp = String(aD).localeCompare(String(bD));
       } else if (activeSort === 'By Creation Time') {
         cmp = (a.id || 0) - (b.id || 0);
       } else if (activeSort === 'By Name') {
-        cmp = a.title.localeCompare(b.title);
+        cmp = String(a.title || '').localeCompare(String(b.title || ''));
       } else if (activeSort === 'By Priority') {
         cmp = (b.priorityVal || 2) - (a.priorityVal || 2);
       }
@@ -91,8 +91,8 @@
 
   // ── Split lists for the two-column layout ──
   // Left column: ABORTED + DRIFT-ABORTED | Right column: VICTORY
-  let leftTasks = $derived(filteredAll.filter(t => t.resolution === 'ABORTED'));
-  let rightTasks = $derived(filteredAll.filter(t => t.resolution === 'VICTORY'));
+  let leftTasks = $derived(filteredAll.filter(t => (t.resolution || '').toUpperCase() === 'ABORTED'));
+  let rightTasks = $derived(filteredAll.filter(t => (t.resolution || '').toUpperCase() === 'VICTORY'));
 
   // Always split layout, even when filtered by priority
   let showSplitLayout = $state(true);

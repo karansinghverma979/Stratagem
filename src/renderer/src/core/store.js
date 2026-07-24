@@ -62,10 +62,29 @@ export const weaponizedTasks = writable([]);
 export const archivedTasks = writable([]);
 export const arsenalTasks = writable([]);
 
+export const highlightedTaskId = writable(null);
+export function triggerHighlightTask(taskId) {
+  if (!taskId) return;
+  highlightedTaskId.set(taskId);
+  setTimeout(() => {
+    highlightedTaskId.update(curr => curr === taskId ? null : curr);
+  }, 4500);
+}
+
 let cachedMissions = [];
 let initialSyncDone = false;
 export let stopTicker = () => {};
 
+
+const storeCache = {
+  exec: '',
+  breach: '',
+  rawIntel: '',
+  synth: '',
+  weapon: '',
+  archive: '',
+  arsenal: ''
+};
 
 export function rebuildStoresFromCache(silent = false) {
   const exec = [];
@@ -105,9 +124,18 @@ export function rebuildStoresFromCache(silent = false) {
     const tbUpper = (m.temporal_boundary || '').trim().toUpperCase();
     const hasDeadline = m.temporal_boundary && tbUpper !== '' && tbUpper !== 'TBD' && tbUpper !== 'READY' && tbUpper !== 'DEPLOYED' && tbUpper !== 'NO DEADLINE';
 
-    const deadlineTime = new Date(m.temporal_boundary).getTime();
-    const isOverdue = !isNaN(deadlineTime) && deadlineTime < Date.now();
-    const derivedStatus = (m.status === 'BREACH' || (hasDeadline && isOverdue)) ? 'BREACH' : m.status;
+    let isOverdue = false;
+    if (hasDeadline) {
+      const dlDate = new Date(m.temporal_boundary);
+      if (!isNaN(dlDate.getTime())) {
+        const dlMidnight = new Date(dlDate.getFullYear(), dlDate.getMonth(), dlDate.getDate(), 0, 0, 0, 0).getTime();
+        const today = new Date();
+        const todayMidnight = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 0, 0, 0, 0).getTime();
+        isOverdue = todayMidnight > dlMidnight;
+      }
+    }
+    const isFinalState = m.status === 'VICTORY' || m.status === 'ABORTED';
+    const derivedStatus = (!isFinalState && (m.status === 'BREACH' || (m.status === 'EXECUTION' && hasDeadline && isOverdue))) ? 'BREACH' : m.status;
 
     const formattedMission = {
       id: m.id,
@@ -121,8 +149,10 @@ export function rebuildStoresFromCache(silent = false) {
       done: derivedStatus === 'VICTORY',
       priorityVal: m.threat_level === 'HIGH' ? 3 : (m.threat_level === 'LOW' ? 1 : 2),
       isRescheduled: m.is_rescheduled === 1 || m.is_rescheduled === true,
-      resolution: derivedStatus === 'VICTORY' ? 'VICTORY' : (derivedStatus === 'ABORTED' ? 'ABORTED' : null),
-      completionDate: m.created_at ? m.created_at.split(' ')[0] : new Date().toISOString().split('T')[0],
+      resolution: (derivedStatus || '').toUpperCase() === 'VICTORY' ? 'VICTORY' : (((derivedStatus || '').toUpperCase() === 'ABORTED' || (derivedStatus || '').toUpperCase() === 'ABORT') ? 'ABORTED' : null),
+      completionDate: m.completed_at 
+        ? m.completed_at.split('T')[0].split(' ')[0] 
+        : (m.created_at ? m.created_at.split(' ')[0] : new Date().toISOString().split('T')[0]),
       desc: `Mission designated under threat level ${m.threat_level}. Boundary: ${m.temporal_boundary}`,
       classifications: dbClassifications.length > 0 ? dbClassifications : ['DATABASE', m.threat_level || 'MED'],
       createdAt: m.created_at,
@@ -162,13 +192,47 @@ export function rebuildStoresFromCache(silent = false) {
     }
   }
 
-  executionTasks.set(exec);
-  breachedTasks.set(breach);
-  rawIntelTasks.set(rawIntel);
-  synthesizingTasks.set(synth);
-  weaponizedTasks.set(weapon);
-  archivedTasks.set(archive);
-  arsenalTasks.set(arsenal);
+  const execStr = JSON.stringify(exec);
+  if (storeCache.exec !== execStr) {
+    storeCache.exec = execStr;
+    executionTasks.set(exec);
+  }
+
+  const breachStr = JSON.stringify(breach);
+  if (storeCache.breach !== breachStr) {
+    storeCache.breach = breachStr;
+    breachedTasks.set(breach);
+  }
+
+  const rawIntelStr = JSON.stringify(rawIntel);
+  if (storeCache.rawIntel !== rawIntelStr) {
+    storeCache.rawIntel = rawIntelStr;
+    rawIntelTasks.set(rawIntel);
+  }
+
+  const synthStr = JSON.stringify(synth);
+  if (storeCache.synth !== synthStr) {
+    storeCache.synth = synthStr;
+    synthesizingTasks.set(synth);
+  }
+
+  const weaponStr = JSON.stringify(weapon);
+  if (storeCache.weapon !== weaponStr) {
+    storeCache.weapon = weaponStr;
+    weaponizedTasks.set(weapon);
+  }
+
+  const archiveStr = JSON.stringify(archive);
+  if (storeCache.archive !== archiveStr) {
+    storeCache.archive = archiveStr;
+    archivedTasks.set(archive);
+  }
+
+  const arsenalStr = JSON.stringify(arsenal);
+  if (storeCache.arsenal !== arsenalStr) {
+    storeCache.arsenal = arsenalStr;
+    arsenalTasks.set(arsenal);
+  }
 
   if (!silent) {
     AudioEngine.play('data-decode');
@@ -248,6 +312,7 @@ export async function updateMissionStatus(id, status) {
     rebuildStoresFromCache(true);
   }
   AudioEngine.play('data-lock');
+  triggerHighlightTask(id);
 }
 
 export async function updateMissionThreatLevel(id, threatLevel) {
@@ -276,6 +341,10 @@ export async function updateMissionDetails(id, title, classifications, threatLev
       targetStatus = 'EXECUTION';
       if (!old.initiated_at || old.initiated_at === 'null' || old.temporal_boundary === 'NO DEADLINE' || !old.temporal_boundary) {
         targetInitiatedAt = new Date().toISOString();
+      }
+    } else {
+      if (status === 'EXECUTION' || status === 'BREACH') {
+        targetStatus = 'RAW_INTEL';
       }
     }
     
@@ -326,6 +395,7 @@ export async function rescheduleMission(id, newDeadline) {
 export async function deleteMission(id) {
   if (typeof window === 'undefined' || !window.stratagemAPI) return;
   await window.stratagemAPI.deleteMission(id);
+  localStorage.removeItem(`stratagem_objectives_${id}`);
   cachedMissions = cachedMissions.filter(m => m.id !== id);
   rebuildStoresFromCache(true);
   AudioEngine.play('fail');
@@ -334,6 +404,13 @@ export async function deleteMission(id) {
 export async function purgeDatabase() {
   if (typeof window === 'undefined' || !window.stratagemAPI) return;
   await window.stratagemAPI.purgeDatabase();
+  // Clear all localStorage keys starting with stratagem_objectives_
+  for (let i = localStorage.length - 1; i >= 0; i--) {
+    const key = localStorage.key(i);
+    if (key && key.startsWith('stratagem_objectives_')) {
+      localStorage.removeItem(key);
+    }
+  }
   cachedMissions = [];
   rebuildStoresFromCache(true);
   AudioEngine.play('shutdown');

@@ -461,6 +461,9 @@
         r.triggered = true;
         listChanged = true;
         addLog(`ALERT TRIGGERED: ${r.text.substring(0, 15)}`);
+        if (window.stratagemAPI && window.stratagemAPI.showNotification) {
+          window.stratagemAPI.showNotification('STRATAGEM CHRONOS ALERT', r.text);
+        }
 
         const logId = Math.random().toString(36).substring(2, 9);
         const logEntry = {

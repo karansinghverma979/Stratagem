@@ -12,8 +12,8 @@
   import Stopwatch from './Stopwatch.svelte';
   import './chronos.css';
 
-  // Feature selection: 'timer', 'todo', 'reminders', or 'stopwatch'
-  let activeFeature = $state('timer');
+  // Feature selection: 'todo', 'reminders', 'timer', or 'stopwatch'
+  let activeFeature = $state('todo');
 
   // Shared clock tick
   let currentTick = $state(Date.now());
@@ -238,6 +238,12 @@
         localStorage.setItem('chronos_focus_sessions', focusSessionCount.toString());
         addLog("FOCUS SESS COMPLETION CONFIRMED");
         saveCurrentSessionToHistory(true);
+        if (window.stratagemAPI && window.stratagemAPI.showNotification) {
+          window.stratagemAPI.showNotification(
+            'FOCUS SESSION PROTOCOL COMPLETE',
+            `Focus session completed successfully! Mode: ${currentTimerMode}`
+          );
+        }
       }
       lastRunningState = isRunning;
     });
@@ -329,9 +335,25 @@
     addLog(`MODULE SWAP: ${feature.toUpperCase()} PORT DEPLOYED`);
   };
 
+  // Auto-save todoItems to localStorage whenever changed
+  $effect(() => {
+    localStorage.setItem('chronos_active_todo_items', JSON.stringify(todoItems));
+  });
+
   let mainInterval: any;
   onMount(() => {
     addLog("CHRONOS PROTOCOLS INITIATED");
+
+    // Load active checklist objectives once at startup
+    try {
+      const savedTodos = localStorage.getItem('chronos_active_todo_items');
+      if (savedTodos) {
+        todoItems = JSON.parse(savedTodos);
+      }
+    } catch (e) {
+      console.error('Failed to parse chronos_active_todo_items:', e);
+    }
+    
     
     // Load reminders and sessions data once at startup
     try {
@@ -503,22 +525,22 @@
           onmouseenter={() => AudioEngine.play('ui-hover')}
           aria-label="Toggle Feature"
         >
-          <button class="toggle-slot slot-left" onclick={() => setFeature('timer')} aria-label="Timer Mode">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round">
-              <circle cx="12" cy="12" r="10" />
-              <polyline points="12 6 12 12 16 14" />
-            </svg>
-          </button>
-          <button class="toggle-slot slot-center-left" onclick={() => setFeature('todo')} aria-label="Todo Mode">
+          <button class="toggle-slot slot-left" onclick={() => setFeature('todo')} aria-label="Todo Mode">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round">
               <rect x="3" y="3" width="18" height="18" rx="2" />
               <path d="m9 11 3 3 6-6" />
             </svg>
           </button>
-          <button class="toggle-slot slot-center-right" onclick={() => setFeature('reminders')} aria-label="Reminders Mode">
+          <button class="toggle-slot slot-center-left" onclick={() => setFeature('reminders')} aria-label="Reminders Mode">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round">
               <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
               <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+            </svg>
+          </button>
+          <button class="toggle-slot slot-center-right" onclick={() => setFeature('timer')} aria-label="Timer Mode">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10" />
+              <polyline points="12 6 12 12 16 14" />
             </svg>
           </button>
           <button class="toggle-slot slot-right" onclick={() => setFeature('stopwatch')} aria-label="Stopwatch Mode">
@@ -531,12 +553,7 @@
           </button>
           
           <div class="toggle-thumb">
-            {#if activeFeature === 'timer'}
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round">
-                <circle cx="12" cy="12" r="10" />
-                <polyline points="12 6 12 12 16 14" />
-              </svg>
-            {:else if activeFeature === 'todo'}
+            {#if activeFeature === 'todo'}
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round">
                 <rect x="3" y="3" width="18" height="18" rx="2" />
                 <path d="m9 11 3 3 6-6" />
@@ -545,6 +562,11 @@
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
                 <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+              </svg>
+            {:else if activeFeature === 'timer'}
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10" />
+                <polyline points="12 6 12 12 16 14" />
               </svg>
             {:else}
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">

@@ -1,5 +1,7 @@
 <script lang="ts">
   import { AudioEngine } from '../../../core/audio-engine';
+  import { highlightedTaskId } from '../../../core/store';
+  import { tick } from 'svelte';
 
   let { task, onprotocolclick, searchQuery = '' } = $props();
 
@@ -78,13 +80,17 @@
       const dateStr = dateMatch[1];
       const parsedDate = Date.parse(dateStr);
       if (!isNaN(parsedDate)) {
-        // Calculate remaining days
-        const diffTime = parsedDate - Date.now();
-        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        // Calculate remaining days using local midnight comparison
+        const dlDate = new Date(parsedDate);
+        const dlMidnight = new Date(dlDate.getFullYear(), dlDate.getMonth(), dlDate.getDate(), 0, 0, 0, 0);
+        const today = new Date();
+        const todayMidnight = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 0, 0, 0, 0);
+        
+        const diffTime = dlMidnight.getTime() - todayMidnight.getTime();
+        const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
         
         // Format date string beautifully (e.g., JUN 5, 2026)
-        const dateObj = new Date(parsedDate);
-        const formattedDate = dateObj.toLocaleDateString(undefined, { 
+        const formattedDate = dlDate.toLocaleDateString(undefined, { 
           month: 'short', 
           day: 'numeric', 
           year: 'numeric' 
@@ -94,7 +100,7 @@
         if (diffDays < 0) {
           remainingStr = 'OVERDUE';
         } else if (diffDays === 0) {
-          remainingStr = 'TODAY';
+          remainingStr = '0 DAYS LEFT';
         } else if (diffDays === 1) {
           remainingStr = '1 DAY LEFT';
         } else {
@@ -112,16 +118,27 @@
       remaining: cleanRaw === 'IMMEDIATE' ? 'URGENT' : `${cleanRaw} LEFT`
     };
   });
+
+  let rowEl = $state<HTMLDivElement | null>(null);
+  $effect(() => {
+    if (task.id === $highlightedTaskId && rowEl) {
+      tick().then(() => {
+        rowEl?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      });
+    }
+  });
 </script>
 
 <!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_static_element_interactions -->
 <div 
+  bind:this={rowEl}
   class="task-row" 
   class:completed={isCompleted}
   class:priority-high={task.priority === 'HIGH'}
   class:priority-med={task.priority === 'MED'}
   class:priority-low={task.priority === 'LOW'}
   class:hovered={isHovered}
+  class:highlight-flash={task.id === $highlightedTaskId}
   onclick={handleRowClick}
   onmouseenter={handleMouseEnter}
   onmouseleave={handleMouseLeave}
@@ -616,5 +633,27 @@
     border: 1.5px solid #00ff9f;
     color: #00ff9f;
     box-shadow: 0 0 10px rgba(0, 255, 159, 0.2);
+  }
+
+  .task-row.highlight-flash {
+    animation: FuiFlashHighlight 4.5s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+  }
+
+  @keyframes FuiFlashHighlight {
+    0% {
+      background: rgba(139, 92, 246, 0.45);
+      border-color: rgba(139, 92, 246, 1) !important;
+      box-shadow: 0 0 25px rgba(139, 92, 246, 0.8), inset 0 0 15px rgba(255, 255, 255, 0.2);
+    }
+    15% {
+      background: rgba(139, 92, 246, 0.3);
+      border-color: rgba(139, 92, 246, 0.8) !important;
+      box-shadow: 0 0 20px rgba(139, 92, 246, 0.6), inset 0 0 10px rgba(255, 255, 255, 0.15);
+    }
+    100% {
+      background: transparent;
+      border-color: rgba(255, 255, 255, 0.15);
+      box-shadow: none;
+    }
   }
 </style>

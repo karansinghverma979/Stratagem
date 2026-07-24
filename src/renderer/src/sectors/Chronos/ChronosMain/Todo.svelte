@@ -135,7 +135,7 @@
     addLog(`LIST ARCHIVED: ${finalTitle}`);
     
     todoItems = [];
-    currentListTitle = 'DAILY OPERATIONS';
+    currentListTitle = `${getTodayDateString()} DAILY OPERATIONS`;
 
     if (window.stratagemAPI) {
       try {
@@ -273,7 +273,37 @@
     }
   };
 
+  // Auto-save checklist title to localStorage
+  $effect(() => {
+    localStorage.setItem('chronos_active_todo_title', currentListTitle);
+  });
+
   onMount(async () => {
+    const savedTitle = localStorage.getItem('chronos_active_todo_title');
+    const todayStr = getTodayDateString();
+
+    if (savedTitle) {
+      const match = savedTitle.match(/^(\d{2}-\d{2}-\d{4})\s*(.*)$/);
+      if (match) {
+        const titleDate = match[1];
+        const restOfTitle = match[2];
+        if (titleDate !== todayStr) {
+          // Date rolled over! Update the date prefix to today's date, keeping items intact.
+          currentListTitle = `${todayStr} ${restOfTitle || 'DAILY OPERATIONS'}`;
+          localStorage.setItem('chronos_active_todo_title', currentListTitle);
+          addLog(`DATE ROLLOVER: ACTIVE PROTOCOL MOVED TO ${todayStr}`);
+        } else {
+          currentListTitle = savedTitle;
+        }
+      } else {
+        currentListTitle = `${todayStr} ${savedTitle}`;
+        localStorage.setItem('chronos_active_todo_title', currentListTitle);
+      }
+    } else {
+      currentListTitle = `${todayStr} DAILY OPERATIONS`;
+      localStorage.setItem('chronos_active_todo_title', currentListTitle);
+    }
+
     const savedTemplates = localStorage.getItem('chronos_objective_templates');
     if (savedTemplates) {
       objectiveTemplates = JSON.parse(savedTemplates);

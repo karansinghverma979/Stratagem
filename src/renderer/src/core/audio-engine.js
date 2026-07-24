@@ -20,17 +20,26 @@ function getAudioContext() {
   return audioCtx;
 }
 
-// Reusable noise generator for mechanical/tactical bursts
-function createNoiseSource(ctx, duration) {
-  try {
-    const bufferSize = ctx.sampleRate * duration;
-    const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
-    const data = buffer.getChannelData(0);
+let sharedNoiseBuffer = null;
+
+function getSharedNoiseBuffer(ctx) {
+  if (!sharedNoiseBuffer) {
+    const sampleRate = ctx.sampleRate || 44100;
+    const bufferSize = sampleRate * 2; // 2 seconds of noise
+    sharedNoiseBuffer = ctx.createBuffer(1, bufferSize, sampleRate);
+    const data = sharedNoiseBuffer.getChannelData(0);
     for (let i = 0; i < bufferSize; i++) {
       data[i] = Math.random() * 2 - 1;
     }
+  }
+  return sharedNoiseBuffer;
+}
+
+// Reusable noise generator for mechanical/tactical bursts
+function createNoiseSource(ctx, duration) {
+  try {
     const source = ctx.createBufferSource();
-    source.buffer = buffer;
+    source.buffer = getSharedNoiseBuffer(ctx);
     return source;
   } catch (e) {
     return null;
@@ -54,8 +63,10 @@ export const AudioEngine = {
   play(soundName) {
     if (!audioEnabled) return;
 
+    const now = Date.now();
     if (soundName !== 'ui-hover' && soundName !== 'tick') {
-      lastPlayTime = Date.now();
+      if (now - lastPlayTime < 50) return;
+      lastPlayTime = now;
     }
 
     const ctx = getAudioContext();

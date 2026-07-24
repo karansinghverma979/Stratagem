@@ -7,7 +7,7 @@
     executionTasks, breachedTasks, rawIntelTasks,
     synthesizingTasks, weaponizedTasks, archivedTasks,
     syncAntaryami, closeTaskViewTrigger, addNotification,
-    insertMission, updateMissionDetails, rescheduleMission
+    insertMission, updateMissionDetails, rescheduleMission, triggerHighlightTask
   } from '../../../core/store.js';
   import { triggerShield } from '../../../core/shield-store.js';
   import TemporalNexus from '../ForgeCalendar/TemporalNexus.svelte';
@@ -112,18 +112,24 @@
     }
   };
 
+  let cachedInputLeftOffset = 0;
+  let lastClassificationsLength = -1;
+
   const updatePortalPosition = () => {
     if (registryInputEl && registryBoxEl) {
       // Measure typed text width to dynamically track the blinking cursor position
       const textWidth = getTextWidth(classificationInput, '950 19px Outfit');
 
-      // Use exact screen coordinates to prevent margin/padding/scroll bugs
-      const inputRect = registryInputEl.getBoundingClientRect();
-      const boxRect = registryBoxEl.getBoundingClientRect();
+      // Only query getBoundingClientRect when tag count changes or cache is cleared
+      if (cachedInputLeftOffset === 0 || classifications.length !== lastClassificationsLength) {
+        const inputRect = registryInputEl.getBoundingClientRect();
+        const boxRect = registryBoxEl.getBoundingClientRect();
+        cachedInputLeftOffset = inputRect.left - boxRect.left;
+        lastClassificationsLength = classifications.length;
+      }
 
       // Calculate precise visual location of the blinking cursor relative to the registry box
-      // padding-left is essentially 0 because of margin: 0 24px in the CSS
-      const cursorX = (inputRect.left - boxRect.left) + textWidth;
+      const cursorX = cachedInputLeftOffset + textWidth;
 
       const boxWidth = registryBoxEl.clientWidth;
       const portalWidth = 480; // Upgraded width
@@ -145,6 +151,7 @@
   };
 
   const handleRegistryScroll = () => {
+    cachedInputLeftOffset = 0; // Invalidate cached layout offset on scroll
     updateRegistryScrollState();
     updatePortalPosition();
   };
@@ -165,6 +172,7 @@
   };
 
   const handleWindowResize = () => {
+    cachedInputLeftOffset = 0; // Invalidate cached layout offset on resize
     updatePortalPosition();
     updateRegistryScrollState();
   };
@@ -292,13 +300,19 @@
 
   $effect(() => {
     if (isOpen) {
+      cachedInputLeftOffset = 0;
       if (initialTask) {
         missionDesignation = initialTask.title;
         threatLevel = initialTask.priority || initialTask.tags[1] || 'MED';
-        classifications = (initialTask.tags || []).filter((t: string) => t !== 'RAW' && t !== 'SYNTH' && t !== 'WEAPON');
+        deadline = initialTask.deadlineDate || initialTask.temporal_boundary || '';
+        classifications = (initialTask.tags || []).filter((t: string) => {
+          const u = t.toUpperCase().trim();
+          return u !== 'RAW' && u !== 'SYNTH' && u !== 'WEAPON' && u !== '#SYSTEM' && u !== 'SYSTEM' && u !== 'HISTORICAL';
+        });
       } else {
         missionDesignation = initialDesignation;
         threatLevel = 'MED';
+        deadline = '';
         classifications = [];
       }
       validationError = '';
@@ -459,61 +473,82 @@
       return;
     }
 
+    // Capture state snapshot before invoking onclose()
+    const taskToUpdate = initialTask;
+    const rescheduleFlag = isRescheduleMode;
+    const currentDeadline = deadline;
+    const currentDesignation = missionDesignation;
+    const currentClassifications = [...classifications];
+    const currentThreatLevel = threatLevel;
+
     isProcessing = true;
     validationError = '';
 
-    try {
-      if (window.stratagemAPI) {
-        if (isRescheduleMode) {
-          const dlVal = deadline.trim();
-          await rescheduleMission(initialTask.id, dlVal);
-          playAudio('success');
-          triggerShield(`RE-ALIGNED: ${missionDesignation.trim().toUpperCase()}`, 'SUCCESS', 4500);
-          addNotification('TACTICAL RE-ALIGNMENT REGISTERED', `The mission "${missionDesignation.trim().toUpperCase()}" has been successfully re-aligned to ${formatDeadlineDate(deadline)}`, 'success');
-          closeTaskViewTrigger.update(n => n + 1);
-        } else if (initialTask) {
-          // Weaponize / Update existing mission details using dedicated transactional API
-          const dlVal = deadline.trim();
-          const origStatus = initialTask.status || 'RAW_INTEL';
-          await updateMissionDetails(
-            initialTask.id,
-            missionDesignation.trim(),
-            classifications.join(','),
-            threatLevel,
-            dlVal || 'NO DEADLINE',
-            origStatus
-          );
-          
-          playAudio('success');
-          triggerShield(`WEAPONIZED: ${missionDesignation.trim().toUpperCase()}`, 'SUCCESS', 4500);
-          addNotification('TACTICAL PROTOCOL RECALIBRATED', `Details for mission "${missionDesignation.trim().toUpperCase()}" were successfully saved to SQLite database`, 'success');
-        } else {
-          // Create new mission
-          await insertMission({
-            title: missionDesignation.trim(),
-            temporal_boundary: deadline.trim() || 'NO DEADLINE',
-            threat_level: threatLevel,
-            status: deadline ? 'EXECUTION' : 'RAW_INTEL',
-            classifications: classifications.join(',')
-          });
+    setTimeout(async () => {
+      let highlightTaskId = taskToUpdate ? taskToUpdate.id : null;
+      try {
+        if (window.stratagemAPI) {
+          if (rescheduleFlag) {
+            const dlVal = currentDeadline.trim();
+            await rescheduleMission(taskToUpdate.id, dlVal);
+            playAudio('success');
+            triggerShield(`RE-ALIGNED: ${currentDesignation.trim().toUpperCase()}`, 'SUCCESS', 4500);
+            addNotification('TACTICAL RE-ALIGNMENT REGISTERED', `The mission "${currentDesignation.trim().toUpperCase()}" has been successfully re-aligned to ${formatDeadlineDate(currentDeadline)}`, 'success');
+            closeTaskViewTrigger.update(n => n + 1);
+          } else if (taskToUpdate) {
+            // Weaponize / Update existing mission details using dedicated transactional API
+            const dlVal = currentDeadline.trim();
+            const origStatus = taskToUpdate.status || 'RAW_INTEL';
+            await updateMissionDetails(
+              taskToUpdate.id,
+              currentDesignation.trim(),
+              currentClassifications.join(','),
+              currentThreatLevel,
+              dlVal || 'NO DEADLINE',
+              origStatus
+            );
+            
+            playAudio('success');
+            triggerShield(`WEAPONIZED: ${currentDesignation.trim().toUpperCase()}`, 'SUCCESS', 4500);
+            addNotification('TACTICAL PROTOCOL RECALIBRATED', `Details for mission "${currentDesignation.trim().toUpperCase()}" were successfully saved to SQLite database`, 'success');
+          } else {
+            // Create new mission
+            const createdResult = await insertMission({
+              title: currentDesignation.trim(),
+              temporal_boundary: currentDeadline.trim() || 'NO DEADLINE',
+              threat_level: currentThreatLevel,
+              status: currentDeadline ? 'EXECUTION' : 'RAW_INTEL',
+              classifications: currentClassifications.join(',')
+            });
+            if (createdResult && createdResult.id) {
+              highlightTaskId = createdResult.id;
+            }
 
-          playAudio('success');
-          triggerShield(`FORGED: ${missionDesignation.trim().toUpperCase()}`, 'SUCCESS', 4500);
-          addNotification('COVERT OPERATION AUTHORIZED', `New tactical mission thread "${missionDesignation.trim().toUpperCase()}" successfully forged in sector database`, 'success');
+            playAudio('success');
+            triggerShield(`FORGED: ${currentDesignation.trim().toUpperCase()}`, 'SUCCESS', 4500);
+            addNotification('COVERT OPERATION AUTHORIZED', `New tactical mission thread "${currentDesignation.trim().toUpperCase()}" successfully forged in sector database`, 'success');
+          }
+          await syncAntaryami();
         }
-        await syncAntaryami();
+      } catch (e: any) {
+        console.error('[Forge] Initiation Error:', e);
+        addNotification('DATABASE SYNC FAILURE', `An unexpected error occurred: ${e.message || e}`, 'error');
+      } finally {
+        onclose();
+        isProcessing = false;
+        missionDesignation = '';
+        deadline = '';
+        threatLevel = 'MED';
+        classifications = [];
+
+        // Wait for modal fade out transition (300ms) before triggering the visual highlight pulse
+        if (highlightTaskId) {
+          setTimeout(() => {
+            triggerHighlightTask(highlightTaskId);
+          }, 350);
+        }
       }
-    } catch (e: any) {
-      console.error('[Forge] Initiation Error:', e);
-      addNotification('DATABASE SYNC FAILURE', `An unexpected error occurred: ${e.message || e}`, 'error');
-    } finally {
-      isProcessing = false;
-      missionDesignation = '';
-      deadline = '';
-      threatLevel = 'MED';
-      classifications = [];
-      onclose();
-    }
+    }, 750);
   };
 
   const getHighlightedText = (text: string, query: string) => {
@@ -1288,6 +1323,18 @@
         <!-- svelte-ignore a11y_click_events_have_key_events -->
         <div class="overlord-portal-backdrop" transition:fade={{ duration: 200 }} onclick={() => classificationInput = ''} role="presentation"></div>
       {/if}
+
+      {#if isProcessing}
+        <div class="processing-overlay" transition:fade={{ duration: 150 }}>
+          <div class="spinner-container">
+            <div class="fui-spinner"></div>
+            <div class="fui-spinner-ring"></div>
+          </div>
+          <span class="processing-text">
+            {isRescheduleMode ? 'REALIGNING TEMPORAL NEXUS...' : (initialTask ? 'RECALIBRATING INTEL PROTOCOLS...' : 'FORGING TACTICAL THREAD...')}
+          </span>
+        </div>
+      {/if}
     </div>
   </div>
 
@@ -1316,7 +1363,9 @@
     top: 80px; left: 0; width: 100vw; height: calc(100vh - 80px);
     display: flex; align-items: center; justify-content: center;
     z-index: 12000;
-    background: transparent;
+    background: rgba(2, 2, 5, 0.55);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
     will-change: opacity;
   }
 
@@ -3682,5 +3731,82 @@
   }
   .terminal-shell-premium.has-collision-error .laser-pulse {
     background: linear-gradient(90deg, transparent, #ef4444, transparent);
+  }
+
+  .processing-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(4, 4, 8, 0.9);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 2000;
+    border-radius: 12px;
+    border: 1px solid rgba(139, 92, 246, 0.25);
+  }
+
+  .spinner-container {
+    position: relative;
+    width: 60px;
+    height: 60px;
+    margin-bottom: 20px;
+  }
+
+  .fui-spinner {
+    box-sizing: border-box;
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    border: 3px solid transparent;
+    border-top-color: #8b5cf6;
+    border-bottom-color: #00ff9f;
+    border-radius: 50%;
+    animation: fuiSpinnerRotate 1.2s cubic-bezier(0.5, 0, 0.5, 1) infinite;
+  }
+
+  .fui-spinner-ring {
+    box-sizing: border-box;
+    position: absolute;
+    width: 80%;
+    height: 80%;
+    top: 10%;
+    left: 10%;
+    border: 2px solid transparent;
+    border-left-color: #00ffff;
+    border-right-color: #ff2d55;
+    border-radius: 50%;
+    animation: fuiSpinnerRotateCounter 0.8s linear infinite;
+  }
+
+  .processing-text {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 16px;
+    font-weight: 800;
+    color: #8b5cf6;
+    text-transform: uppercase;
+    letter-spacing: 0.2em;
+    text-shadow: 0 0 10px rgba(139, 92, 246, 0.6);
+    animation: textPulse 1.5s infinite alternate;
+  }
+
+  @keyframes fuiSpinnerRotate {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+
+  @keyframes fuiSpinnerRotateCounter {
+    0% { transform: rotate(360deg); }
+    100% { transform: rotate(0deg); }
+  }
+
+  @keyframes textPulse {
+    from { opacity: 0.6; }
+    to { opacity: 1; }
   }
 </style>

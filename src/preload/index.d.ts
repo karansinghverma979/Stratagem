@@ -49,6 +49,7 @@ declare global {
     }
     osAPI: {
       closeWindow: () => void
+      minimizeWindow: () => void
       toggleMaximize: () => void
       exportDatabase: () => Promise<any>
       importDatabase: () => Promise<any>

@@ -98,6 +98,8 @@
   let clickCount = $state(0);
   let lastUpdatedDate = $state<string | null>(null);
   let subtasksModified = $state(false);
+  let isSavingResolution = $state(false);
+  let resolutionType = $state<'VICTORY' | 'ABORT' | null>(null);
   let auditScrollContainer = $state<HTMLDivElement | null>(null);
 
   const triggerClose = () => {
@@ -543,23 +545,35 @@
     AudioEngine.play('critical_breach');
     
     const missionId = mission.id;
-    
-    if (comments.trim()) {
-      addTimelineLog('SYSTEM_ABORT', `Emergency Purge Authorized. Reason: ${comments.trim()}`);
-    } else {
-      addTimelineLog('SYSTEM_ABORT', `Emergency Purge Authorized. No comment logged.`);
-    }
-    
-    triggerClose();
+    isSavingResolution = true;
+    resolutionType = 'ABORT';
     
     try {
-      if (window.stratagemAPI) {
-        await window.stratagemAPI.updateMissionStatus(missionId, 'ABORTED');
-        await syncAntaryami();
-        addNotification('PROTOCOL ABORTED', 'Emergency Purge Dispatched', 'error');
+      if (comments.trim()) {
+        addTimelineLog('SYSTEM_ABORT', `Emergency Purge Authorized. Reason: ${comments.trim()}`);
+      } else {
+        addTimelineLog('SYSTEM_ABORT', `Emergency Purge Authorized. No comment logged.`);
       }
+      
+      setTimeout(async () => {
+        try {
+          if (window.stratagemAPI) {
+            await window.stratagemAPI.updateMissionStatus(missionId, 'ABORTED');
+            await syncAntaryami();
+            addNotification('PROTOCOL ABORTED', 'Emergency Purge Dispatched', 'error');
+          }
+        } catch (err) {
+          console.error(err);
+        } finally {
+          triggerClose();
+          isSavingResolution = false;
+          resolutionType = null;
+        }
+      }, 750);
     } catch (err) {
       console.error(err);
+      isSavingResolution = false;
+      resolutionType = null;
     }
   };
 
@@ -865,7 +879,7 @@
                   <span class="info-label font-outfit">PRIORITY LEVEL</span>
                 </div>
                 <div class="priority-readonly-badge-cyber font-outfit priority-{threatLevel.toLowerCase()}-cyber">
-                  {threatLevel} PRIORITY STATE
+                  {threatLevel} PRIORITY
                 </div>
               </div>
 
@@ -1078,6 +1092,17 @@
         </div>
       </footer>
 
+      {#if isSavingResolution}
+        <div class="processing-overlay" transition:fade={{ duration: 150 }}>
+          <div class="spinner-container">
+            <div class="fui-spinner"></div>
+            <div class="fui-spinner-ring"></div>
+          </div>
+          <span class="processing-text">
+            INITIATING PURGE PROTOCOL...
+          </span>
+        </div>
+      {/if}
     </div>
   </div>
 
@@ -3240,6 +3265,84 @@
     background: rgba(255, 45, 85, 0.1) !important;
     border-color: rgba(255, 45, 85, 0.45) !important;
     box-shadow: 0 0 10px rgba(255, 45, 85, 0.25) !important;
+  }
+
+  /* Resolution Saver Overlay Styles */
+  .processing-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(4, 4, 8, 0.9);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 2000;
+    border-radius: 12px;
+    border: 1px solid rgba(139, 92, 246, 0.25);
+  }
+
+  .spinner-container {
+    position: relative;
+    width: 60px;
+    height: 60px;
+    margin-bottom: 20px;
+  }
+
+  .fui-spinner {
+    box-sizing: border-box;
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    border: 3px solid transparent;
+    border-top-color: #8b5cf6;
+    border-bottom-color: #00ff9f;
+    border-radius: 50%;
+    animation: fuiSpinnerRotate 1.2s cubic-bezier(0.5, 0, 0.5, 1) infinite;
+  }
+
+  .fui-spinner-ring {
+    box-sizing: border-box;
+    position: absolute;
+    width: 80%;
+    height: 80%;
+    top: 10%;
+    left: 10%;
+    border: 2px solid transparent;
+    border-left-color: #00ffff;
+    border-right-color: #ff2d55;
+    border-radius: 50%;
+    animation: fuiSpinnerRotateCounter 0.8s linear infinite;
+  }
+
+  .processing-text {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 16px;
+    font-weight: 800;
+    color: #8b5cf6;
+    text-transform: uppercase;
+    letter-spacing: 0.2em;
+    text-shadow: 0 0 10px rgba(139, 92, 246, 0.6);
+    animation: textPulse 1.5s infinite alternate;
+  }
+
+  @keyframes fuiSpinnerRotate {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+
+  @keyframes fuiSpinnerRotateCounter {
+    0% { transform: rotate(360deg); }
+    100% { transform: rotate(0deg); }
+  }
+
+  @keyframes textPulse {
+    from { opacity: 0.6; }
+    to { opacity: 1; }
   }
 </style>
 

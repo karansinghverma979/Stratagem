@@ -66,16 +66,16 @@
     padding: 0;
   }
 
-  .feature-toggle-switch.four-way.timer-active .slot-left {
-    color: rgba(139, 92, 246, 0.6);
-  }
-
-  .feature-toggle-switch.four-way.todo-active .slot-center-left {
+  .feature-toggle-switch.four-way.todo-active .slot-left {
     color: rgba(6, 182, 212, 0.6);
   }
 
-  .feature-toggle-switch.four-way.reminders-active .slot-center-right {
+  .feature-toggle-switch.four-way.reminders-active .slot-center-left {
     color: rgba(217, 70, 239, 0.6);
+  }
+
+  .feature-toggle-switch.four-way.timer-active .slot-center-right {
+    color: rgba(139, 92, 246, 0.6);
   }
 
   .feature-toggle-switch.four-way.stopwatch-active .slot-right {
@@ -99,22 +99,22 @@
     pointer-events: none;
   }
 
-  .feature-toggle-switch.four-way.timer-active .toggle-thumb {
-    background: linear-gradient(135deg, #8b5cf6, #7c3aed);
-    transform: translateX(0px);
-    box-shadow: 0 0 10px rgba(139, 92, 246, 0.6);
-  }
-
   .feature-toggle-switch.four-way.todo-active .toggle-thumb {
     background: linear-gradient(135deg, #06b6d4, #0891b2);
-    transform: translateX(71px);
+    transform: translateX(0px);
     box-shadow: 0 0 10px rgba(6, 182, 212, 0.6);
   }
 
   .feature-toggle-switch.four-way.reminders-active .toggle-thumb {
     background: linear-gradient(135deg, #d946ef, #c084fc);
-    transform: translateX(142px);
+    transform: translateX(71px);
     box-shadow: 0 0 10px rgba(217, 70, 239, 0.6);
+  }
+
+  .feature-toggle-switch.four-way.timer-active .toggle-thumb {
+    background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+    transform: translateX(142px);
+    box-shadow: 0 0 10px rgba(139, 92, 246, 0.6);
   }
 
   .feature-toggle-switch.four-way.stopwatch-active .toggle-thumb {

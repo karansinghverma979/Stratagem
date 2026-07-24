@@ -1,7 +1,7 @@
 <script lang="ts">
   import { AudioEngine } from '../../../core/audio-engine';
-  import { syncAntaryami, addNotification } from '../../../core/store';
-  import { onMount } from 'svelte';
+  import { syncAntaryami, addNotification, highlightedTaskId } from '../../../core/store';
+  import { onMount, tick } from 'svelte';
 
   let { task, onprotocolclick, searchQuery = '', clickable = true, onstrategize = null, coolingState = null, onInitiateTransfer = null, ondeleteclick = null } = $props();
 
@@ -117,10 +117,20 @@
     if (clickable) AudioEngine.play('ui-hover');
   };
   const handleMouseLeave = () => { isHovered = false; };
+
+  let rowEl = $state<HTMLDivElement | null>(null);
+  $effect(() => {
+    if (task.id === $highlightedTaskId && rowEl) {
+      tick().then(() => {
+        rowEl?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      });
+    }
+  });
 </script>
 
 <!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_static_element_interactions -->
 <div
+  bind:this={rowEl}
   class="task-row"
   class:hovered={isHovered && clickable && !showDeleteConfirm}
   class:priority-high={task.priority === 'HIGH'}
@@ -129,6 +139,7 @@
   class:non-clickable={!clickable}
   class:transfer-cooling={coolingState && coolingState.phase === 'cooling'}
   class:transfer-ready={coolingState && coolingState.phase === 'ready'}
+  class:highlight-flash={task.id === $highlightedTaskId}
   draggable="true"
   ondragstart={handleDragStart}
   onclick={handleRowClick}
@@ -826,5 +837,27 @@
   @keyframes borderBreatheGreen {
     0%, 100% { border-color: rgba(0, 255, 159, 0.4); }
     50% { border-color: rgba(0, 255, 159, 0.95); }
+  }
+
+  .task-row.highlight-flash {
+    animation: FuiFlashHighlight 4.5s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+  }
+
+  @keyframes FuiFlashHighlight {
+    0% {
+      background: rgba(139, 92, 246, 0.45);
+      border-color: rgba(139, 92, 246, 1) !important;
+      box-shadow: 0 0 25px rgba(139, 92, 246, 0.8), inset 0 0 15px rgba(255, 255, 255, 0.2);
+    }
+    15% {
+      background: rgba(139, 92, 246, 0.3);
+      border-color: rgba(139, 92, 246, 0.8) !important;
+      box-shadow: 0 0 20px rgba(139, 92, 246, 0.6), inset 0 0 10px rgba(255, 255, 255, 0.15);
+    }
+    100% {
+      background: transparent;
+      border-color: rgba(255, 255, 255, 0.15);
+      box-shadow: none;
+    }
   }
 </style>

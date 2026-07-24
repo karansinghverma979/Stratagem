@@ -87,6 +87,9 @@
   <div class="center-section">
     <div class="meta-row">
       <div class="resolved-date font-mono">RESOLVED: {displayDate}</div>
+      <div class="reschedule-count-badge font-mono" title="Temporal Re-alignments (Max 2)">
+        RESCHEDULES: {task.rescheduleCount || (task.isRescheduled ? 1 : 0)}/2
+      </div>
       {#if isDriftAbort}
         <span class="resolution-badge drift-badge">⚡ DRIFT-ABORTED</span>
       {:else if isVictory}
@@ -306,6 +309,21 @@
   .archive-row.row-victory .resolved-date { color: rgba(0,255,159,0.7); }
   .archive-row.row-aborted .resolved-date { color: rgba(239,68,68,0.7); }
   .archive-row.row-drift .resolved-date   { color: rgba(255,45,85,0.75); }
+
+  /* Reschedule count badge */
+  .reschedule-count-badge {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 9px;
+    font-weight: 800;
+    padding: 2px 7px;
+    border-radius: 4px;
+    letter-spacing: 0.6px;
+    text-transform: uppercase;
+    flex-shrink: 0;
+    color: rgba(167, 139, 250, 0.9);
+    background: rgba(139, 92, 246, 0.12);
+    border: 1px solid rgba(139, 92, 246, 0.3);
+  }
 
   /* Resolution badges */
   .resolution-badge {

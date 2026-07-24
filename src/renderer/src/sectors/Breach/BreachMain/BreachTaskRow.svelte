@@ -64,15 +64,17 @@
     return `${days} ${days === 1 ? 'DAY' : 'DAYS'}`;
   });
 
+  let rescheduleCount = $derived(task?.rescheduleCount || (task?.isRescheduled ? 1 : 0));
+
   let isReschedulable = $derived.by(() => {
-    if (task.isRescheduled) return false;
+    if (rescheduleCount >= 2) return false;
     if (overdueDays > 30) return false;
     return true;
   });
 
   let reschedulableReason = $derived.by(() => {
-    if (task.isRescheduled) {
-      return "RE-ALIGNMENT LOCKED: MAXIMUM RE-ALIGNMENT LIMIT REACHED (LOCKED TO ONE RE-ALIGNMENT)";
+    if (rescheduleCount >= 2) {
+      return "RE-ALIGNMENT LOCKED: MAXIMUM RE-ALIGNMENT LIMIT REACHED (2/2 EXECUTED)";
     }
     if (overdueDays > 30) {
       return "RE-ALIGNMENT LOCKED: OVERDUE EXCEEDS 30 DAYS EXPIRY WINDOW";

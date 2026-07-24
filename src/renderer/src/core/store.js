@@ -137,6 +137,10 @@ export function rebuildStoresFromCache(silent = false) {
     const isFinalState = m.status === 'VICTORY' || m.status === 'ABORTED';
     const derivedStatus = (!isFinalState && (m.status === 'BREACH' || (m.status === 'EXECUTION' && hasDeadline && isOverdue))) ? 'BREACH' : m.status;
 
+    const resCount = m.reschedule_count !== undefined && m.reschedule_count !== null 
+      ? Number(m.reschedule_count) 
+      : (m.is_rescheduled ? 1 : 0);
+
     const formattedMission = {
       id: m.id,
       title: m.title,
@@ -148,7 +152,9 @@ export function rebuildStoresFromCache(silent = false) {
       initiateDate: initDateFormatted,
       done: derivedStatus === 'VICTORY',
       priorityVal: m.threat_level === 'HIGH' ? 3 : (m.threat_level === 'LOW' ? 1 : 2),
-      isRescheduled: m.is_rescheduled === 1 || m.is_rescheduled === true,
+      rescheduleCount: resCount,
+      isRescheduled: resCount > 0,
+      isRescheduleLocked: resCount >= 2,
       resolution: (derivedStatus || '').toUpperCase() === 'VICTORY' ? 'VICTORY' : (((derivedStatus || '').toUpperCase() === 'ABORTED' || (derivedStatus || '').toUpperCase() === 'ABORT') ? 'ABORTED' : null),
       completionDate: m.completed_at 
         ? m.completed_at.split('T')[0].split(' ')[0] 

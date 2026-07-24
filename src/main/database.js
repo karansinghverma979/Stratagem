@@ -72,6 +72,10 @@ export function initDatabase() {
       // Ignore error if column already exists
     });
 
+    db.run(`ALTER TABLE missions ADD COLUMN reschedule_count INTEGER DEFAULT 0`, (err) => {
+      // Ignore error if column already exists
+    });
+
     // Audit Log Table
     db.run(`
       CREATE TABLE IF NOT EXISTS audit_log (
@@ -289,19 +293,22 @@ export function fetchSectorMissions() {
 export function updateMissionAsRescheduled(id, newDeadline) {
   return new Promise((resolve, reject) => {
     if (!db) { reject(new Error('Database not initialized')); return; }
-    db.get("SELECT initiated_at, temporal_boundary, is_rescheduled FROM missions WHERE id = ?", [id], (err, row) => {
+    db.get("SELECT initiated_at, temporal_boundary, is_rescheduled, reschedule_count FROM missions WHERE id = ?", [id], (err, row) => {
       if (err) { reject(err); return; }
       if (!row) { reject(new Error("Mission not found")); return; }
 
       const initiatedAt = row.initiated_at;
       const oldDeadline = row.temporal_boundary;
       const isRescheduled = row.is_rescheduled;
+      const currentCount = row.reschedule_count !== undefined && row.reschedule_count !== null 
+        ? Number(row.reschedule_count) 
+        : (isRescheduled ? 1 : 0);
       
       const nowStr = new Date().toISOString();
 
       if (!initiatedAt || initiatedAt === 'null' || oldDeadline === 'NO DEADLINE' || !oldDeadline) {
         db.run(
-          `UPDATE missions SET status = 'EXECUTION', temporal_boundary = ?, initiated_at = ?, is_rescheduled = 0 WHERE id = ?`,
+          `UPDATE missions SET status = 'EXECUTION', temporal_boundary = ?, initiated_at = ?, is_rescheduled = 0, reschedule_count = 0 WHERE id = ?`,
           [newDeadline, nowStr, id],
           (err2) => {
             if (err2) {
@@ -314,19 +321,20 @@ export function updateMissionAsRescheduled(id, newDeadline) {
           }
         );
       } else {
-        if (isRescheduled === 1) {
-          reject(new Error("CONGESTION AVOIDED: TASK HAS ALREADY BEEN RESCHEDULED ONCE AND CANNOT BE REALIGNED AGAIN"));
+        if (currentCount >= 2) {
+          reject(new Error("CONGESTION AVOIDED: TASK HAS REACHED MAXIMUM RESCHEDULE LIMIT (2/2 EXECUTED)"));
           return;
         }
 
+        const newCount = currentCount + 1;
         db.run(
-          `UPDATE missions SET status = 'EXECUTION', temporal_boundary = ?, is_rescheduled = 1, rescheduled_at = ? WHERE id = ?`,
-          [newDeadline, nowStr, id],
+          `UPDATE missions SET status = 'EXECUTION', temporal_boundary = ?, is_rescheduled = 1, reschedule_count = ?, rescheduled_at = ? WHERE id = ?`,
+          [newDeadline, newCount, nowStr, id],
           (err2) => {
             if (err2) {
               reject(err2);
             } else {
-              appendAuditLog(id, 'TEMPORAL_REALIGNMENT', `Emergency realignment: temporal boundary adjusted to: ${newDeadline}`)
+              appendAuditLog(id, 'TEMPORAL_REALIGNMENT', `Emergency realignment (${newCount}/2): temporal boundary adjusted to: ${newDeadline}`)
                 .then(() => resolve({ success: true }))
                 .catch(() => resolve({ success: true }));
             }

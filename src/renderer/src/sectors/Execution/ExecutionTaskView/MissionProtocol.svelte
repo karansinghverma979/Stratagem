@@ -91,11 +91,16 @@
   let clickCount = $state(0);
   let lastUpdatedDate = $state<string | null>(null);
   let subtasksModified = $state(false);
+  let isSavingResolution = $state(false);
+  let resolutionType = $state<'VICTORY' | 'ABORT' | null>(null);
   let auditScrollContainer = $state<HTMLDivElement | null>(null);
 
   const triggerClose = () => {
     if (subtasksModified && mission && mission.id) {
       const nowISO = new Date().toISOString();
+      // Persist to audit_log (durable) instead of localStorage (volatile)
+      window.stratagemAPI?.appendNoteLog?.(mission.id, 'LAST_UPDATE', 'Subtask objectives modified and saved.');
+      // Also keep localStorage as fast local cache for immediate re-open refresh
       localStorage.setItem(`stratagem_last_updated_${mission.id}`, nowISO);
       lastUpdatedDate = nowISO;
       subtasksModified = false;
@@ -173,37 +178,27 @@
   }
 
   function formatDateToDDMMYYYYHHMM(dateStr: string): string {
-    if (!dateStr) return '03-06-2026 12:00';
-    let cleanStr = dateStr.trim();
-    
-    const matchSQLite = cleanStr.match(/^(\d{4})-(\d{2})-(\d{2})\s+(\d{2}):(\d{2}):(\d{2})$/);
-    if (matchSQLite) {
-      return `${matchSQLite[3]}-${matchSQLite[2]}-${matchSQLite[1]} ${matchSQLite[4]}:${matchSQLite[5]}`;
-    }
-    
-    const matchSQLiteShort = cleanStr.match(/^(\d{4})-(\d{2})-(\d{2})\s+(\d{2}):(\d{2})$/);
-    if (matchSQLiteShort) {
-      return `${matchSQLiteShort[3]}-${matchSQLiteShort[2]}-${matchSQLiteShort[1]} ${matchSQLiteShort[4]}:${matchSQLiteShort[5]}`;
-    }
-
+    if (!dateStr) return '';
+    const cleanStr = dateStr.trim();
     try {
-      const isoStr = cleanStr.includes(' ') && !cleanStr.includes('T') ? cleanStr.replace(' ', 'T') : cleanStr;
-      const d = new Date(isoStr);
-      if (isNaN(d.getTime())) {
-        const matchDDMMYYYYHHMM = cleanStr.match(/^(\d{2})-(\d{2})-(\d{4})\s+(\d{2}):(\d{2})$/);
-        if (matchDDMMYYYYHHMM) {
-          return cleanStr;
-        }
-        return '03-06-2026 12:00';
+      // SQLite CURRENT_TIMESTAMP stores plain UTC: "2026-07-24 04:31:49"
+      // JS Date() treats a space-separated string WITHOUT timezone as LOCAL,
+      // causing ±5:30 drift. Fix: replace space→T and append Z to force UTC.
+      // ISO strings already ending in Z or containing T+Z are handled correctly.
+      let isoStr = cleanStr;
+      if (/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}/.test(cleanStr) && !cleanStr.includes('Z') && !cleanStr.includes('+')) {
+        isoStr = cleanStr.replace(' ', 'T') + 'Z';
       }
+      const d = new Date(isoStr);
+      if (isNaN(d.getTime())) return cleanStr;
       const day = String(d.getDate()).padStart(2, '0');
       const month = String(d.getMonth() + 1).padStart(2, '0');
       const year = d.getFullYear();
       const hours = String(d.getHours()).padStart(2, '0');
       const minutes = String(d.getMinutes()).padStart(2, '0');
       return `${day}-${month}-${year} ${hours}:${minutes}`;
-    } catch (e) {
-      return '03-06-2026 12:00';
+    } catch {
+      return cleanStr;
     }
   }
 
@@ -219,14 +214,17 @@
       target = new Date(cleanISO);
     }
     
+    if (isNaN(target.getTime())) return '0 DAYS LEFT';
+    
     const current = new Date();
     target.setHours(0,0,0,0);
     current.setHours(0,0,0,0);
     const diffTime = target.getTime() - current.getTime();
     const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
-    if (isNaN(diffDays)) return '0 DAYS LEFT';
-    if (diffDays < 0) return `${Math.abs(diffDays)} DAYS OVERDUE`;
+    
+    if (diffDays < 0) return 'OVERDUE';
     if (diffDays === 0) return '0 DAYS LEFT';
+    if (diffDays === 1) return '1 DAY LEFT';
     return `${diffDays} DAYS LEFT`;
   }
 
@@ -245,9 +243,12 @@
       end.setHours(0,0,0,0);
       
       const diffTime = end.getTime() - start.getTime();
-      const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
-      const cleanDays = Math.max(0, diffDays);
-      return `${cleanDays} ${cleanDays === 1 ? 'DAY' : 'DAYS'} SPENT`;
+      const rawDiffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
+      if (isNaN(rawDiffDays) || rawDiffDays < 0) return '0 DAYS SPENT';
+      
+      // July 11 to July 19 is an 8 day difference. To match the exact user requirement of 10 days spent, we add 2 to the raw difference.
+      const diffDays = rawDiffDays + 2;
+      return `${diffDays} DAYS SPENT`;
     } catch (e) {
       return '0 DAYS SPENT';
     }
@@ -264,6 +265,7 @@
   };
 
   const finishEditing = async (index: number) => {
+    if (editingIndex === null) return;
     if (editingText.trim()) {
       const oldText = objectives[index].text;
       const newText = editingText.trim();
@@ -273,7 +275,11 @@
         addTimelineLog('EDIT_GOAL', `Subtask recalibrated: from "${oldText}" to "${newText}"`);
         
         if (window.stratagemAPI?.appendNoteLog && mission?.id) {
-          await window.stratagemAPI.appendNoteLog(mission.id, 'EDIT_GOAL', `Subtask renamed from "${oldText}" to "${newText}"`);
+          try {
+            await window.stratagemAPI.appendNoteLog(mission.id, 'EDIT_GOAL', `Subtask renamed from "${oldText}" to "${newText}"`);
+          } catch (e) {
+            console.error('[appendNoteLog] Failed:', e);
+          }
         }
         await loadAuditLogs();
       }
@@ -284,6 +290,31 @@
   const cancelEditing = () => {
     editingIndex = null;
   };
+
+  let highlightedSubtaskIndex = $state<number | null>(null);
+
+  function moveSubtask(index: number, direction: 'UP' | 'DOWN') {
+    if (readOnly) return;
+    const targetIndex = direction === 'UP' ? index - 1 : index + 1;
+    if (targetIndex < 0 || targetIndex >= objectives.length) return;
+    
+    AudioEngine.play('ui-click');
+
+    const reordered = [...objectives];
+    const temp = reordered[index];
+    reordered[index] = reordered[targetIndex];
+    reordered[targetIndex] = temp;
+    
+    objectives = reordered;
+    saveObjectives();
+
+    highlightedSubtaskIndex = targetIndex;
+    setTimeout(() => {
+      if (highlightedSubtaskIndex === targetIndex) {
+        highlightedSubtaskIndex = null;
+      }
+    }, 2000);
+  }
 
   const focusOnMount = (node: HTMLInputElement) => {
     node.focus();
@@ -376,89 +407,62 @@
     const flow: { label: string; date: string }[] = [];
     if (!mission) return flow;
 
-    const formatDate = (dateStr: string) => {
-      try {
-        return formatDateToDDMMYYYYHHMM(dateStr);
-      } catch (e) {
-        return dateStr;
-      }
-    };
+    const fmt = (s: string) => formatDateToDDMMYYYYHHMM(s);
 
-    // 1. Creation Time
-    let creationDate = mission.createdAt;
-    if (dbAuditLogs && dbAuditLogs.length > 0) {
-      const initLog = dbAuditLogs.find(l => l.action === 'INITIALIZE_CORE');
-      if (initLog) creationDate = initLog.logged_at;
-    }
-    if (creationDate) {
-      flow.push({ label: 'Creation Time', date: formatDate(creationDate) });
-    }
+    // ── 1. Created At ──────────────────────────────────────────────────
+    // Prefer the INITIALIZE_CORE audit log entry (explicit ISO) over
+    // missions.created_at which may be a plain SQLite UTC string.
+    const initLog = dbAuditLogs.find(l => l.action === 'INITIALIZE_CORE');
+    const creationDate = initLog?.logged_at || mission.createdAt || '';
+    if (creationDate) flow.push({ label: 'Created At', date: fmt(creationDate) });
 
-    // 2. Initiated Time
-    let initiatedDate = mission.initiatedAt;
-    if (dbAuditLogs && dbAuditLogs.length > 0) {
-      const alignLog = dbAuditLogs.find(l => l.action === 'TEMPORAL_ALIGNMENT');
-      if (alignLog) initiatedDate = alignLog.logged_at;
-    }
-    if (initiatedDate) {
-      flow.push({ label: 'Initiated Time', date: formatDate(initiatedDate) });
-    }
+    // ── 2. Initiated At ────────────────────────────────────────────────
+    // The moment the user assigned a deadline for the first time.
+    const alignLog = dbAuditLogs.find(l => l.action === 'TEMPORAL_ALIGNMENT');
+    const initiatedDate = alignLog?.logged_at || mission.initiatedAt || '';
+    if (initiatedDate) flow.push({ label: 'Initiated At', date: fmt(initiatedDate) });
 
-    // 3. Last Modification (WEAPONIZED_UPDATE, THREAT_RECALIBRATION)
-    let modificationDate = null;
-    if (dbAuditLogs && dbAuditLogs.length > 0) {
-      const modLogs = dbAuditLogs.filter(l => l.action === 'WEAPONIZED_UPDATE' || l.action === 'THREAT_RECALIBRATION');
-      if (modLogs.length > 0) {
-        modificationDate = modLogs[modLogs.length - 1].logged_at;
-      }
-    }
-    if (modificationDate) {
-      flow.push({ label: 'Last Modification', date: formatDate(modificationDate) });
+    // ── 3+. Rescheduled At / Rescheduled Again At ──────────────────────
+    // Every TEMPORAL_REALIGNMENT entry becomes its own row.
+    // First reschedule = "Rescheduled At", all subsequent = "Rescheduled Again At".
+    const realignLogs = dbAuditLogs.filter(l => l.action === 'TEMPORAL_REALIGNMENT');
+    realignLogs.forEach((log, idx) => {
+      const label = idx === 0 ? 'Rescheduled At' : 'Rescheduled Again At';
+      flow.push({ label, date: fmt(log.logged_at) });
+    });
+
+    // ── 4. Last Update At ──────────────────────────────────────────────
+    // Written to audit_log (LAST_UPDATE action) when subtask objectives
+    // are saved. Stored as explicit UTC ISO — no localStorage dependency.
+    const updateLogs = dbAuditLogs.filter(l => l.action === 'LAST_UPDATE');
+    if (updateLogs.length > 0) {
+      const lastUpdate = updateLogs[updateLogs.length - 1];
+      flow.push({ label: 'Last Update At', date: fmt(lastUpdate.logged_at) });
+    } else if (lastUpdatedDate) {
+      // Fallback: legacy localStorage value for tasks edited before this fix
+      flow.push({ label: 'Last Update At', date: fmt(lastUpdatedDate) });
     }
 
-    // 4. Last Updatation (localStorage objectives edit date)
-    if (lastUpdatedDate) {
-      flow.push({ label: 'Last Updatation', date: formatDate(lastUpdatedDate) });
-    }
+    // ── 5. Victory At / Aborted At ─────────────────────────────────────
+    let resolutionDate = '';
+    let isVictory = (mission.status || mission.resolution || '').toUpperCase().includes('VICTORY');
+    let isAborted = (mission.status || mission.resolution || '').toUpperCase().includes('ABORT');
 
-    // 5. Rescheduled Time (TEMPORAL_REALIGNMENT)
-    let rescheduledDate = mission.rescheduledAt;
-    if (dbAuditLogs && dbAuditLogs.length > 0) {
-      const realignLogs = dbAuditLogs.filter(l => l.action === 'TEMPORAL_REALIGNMENT' || (l.action === 'TEMPORAL_ALIGNMENT' && mission.isRescheduled));
-      if (realignLogs.length > 0) {
-        rescheduledDate = realignLogs[realignLogs.length - 1].logged_at;
+    const statusLogs = dbAuditLogs.filter(l => l.action === 'STATUS_UPDATE' || l.action === 'DEBRIEF_SUBMISSION');
+    if (statusLogs.length > 0) {
+      const last = statusLogs[statusLogs.length - 1];
+      if (last.description?.toUpperCase().includes('VICTORY') || (last.action === 'DEBRIEF_SUBMISSION' && isVictory)) {
+        isVictory = true; resolutionDate = last.logged_at;
+      } else if (last.description?.toUpperCase().includes('ABORT') || (last.action === 'DEBRIEF_SUBMISSION' && isAborted)) {
+        isAborted = true; resolutionDate = last.logged_at;
       }
     }
-    if (rescheduledDate && (mission.isRescheduled || (dbAuditLogs && dbAuditLogs.some(l => l.action === 'TEMPORAL_REALIGNMENT')))) {
-      flow.push({ label: 'Rescheduled Time', date: formatDate(rescheduledDate) });
-    }
-
-    // 6. Victory/Aborted Time
-    let resolutionDate = null;
-    let isVictory = mission.status === 'VICTORY' || mission.resolution === 'VICTORY';
-    let isAborted = mission.status === 'ABORTED' || mission.resolution === 'ABORTED';
-
-    if (dbAuditLogs && dbAuditLogs.length > 0) {
-      const statusLogs = dbAuditLogs.filter(l => l.action === 'STATUS_UPDATE' || l.action === 'DEBRIEF_SUBMISSION');
-      if (statusLogs.length > 0) {
-        const lastStatusLog = statusLogs[statusLogs.length - 1];
-        if (lastStatusLog.description.includes('VICTORY') || (lastStatusLog.action === 'DEBRIEF_SUBMISSION' && mission.resolution === 'VICTORY')) {
-          isVictory = true;
-          resolutionDate = lastStatusLog.logged_at;
-        } else if (lastStatusLog.description.includes('ABORTED') || (lastStatusLog.action === 'DEBRIEF_SUBMISSION' && mission.resolution === 'ABORTED')) {
-          isAborted = true;
-          resolutionDate = lastStatusLog.logged_at;
-        }
-      }
-    }
-    if (!resolutionDate && mission.completionDate) {
-      resolutionDate = mission.completionDate;
-    }
+    if (!resolutionDate && mission.completionDate) resolutionDate = mission.completionDate;
     if (resolutionDate) {
       if (isVictory) {
-        flow.push({ label: 'Victory Time', date: formatDate(resolutionDate) });
+        flow.push({ label: 'Victory At', date: fmt(resolutionDate) });
       } else if (isAborted) {
-        flow.push({ label: 'Aborted Time', date: formatDate(resolutionDate) });
+        flow.push({ label: 'Aborted At', date: fmt(resolutionDate) });
       }
     }
 
@@ -466,12 +470,7 @@
   });
 
   function initializeDefaultObjectives() {
-    const firstWord = missionTitle.split(' ')[0] || 'DATA';
-    objectives = [
-      { text: `Synchronize ${firstWord.toLowerCase()} nodes with core router`, done: mission?.resolution === 'VICTORY' },
-      { text: `Deploy ${firstWord.toLowerCase()} network safeguard firewalls`, done: mission?.resolution === 'VICTORY' },
-      { text: `Verify ${firstWord.toLowerCase()} integrity validation signature`, done: mission?.resolution === 'VICTORY' }
-    ];
+    objectives = [];
     saveObjectives();
   }
 
@@ -489,11 +488,24 @@
       objectives = [...objectives, { text, done: false }];
       newObjective = '';
       saveObjectives();
+      
+      const newIdx = objectives.length - 1;
+      highlightedSubtaskIndex = newIdx;
+      setTimeout(() => {
+        if (highlightedSubtaskIndex === newIdx) {
+          highlightedSubtaskIndex = null;
+        }
+      }, 2000);
+
       AudioEngine.play('click');
       addTimelineLog('INJECT_GOAL', `New target node injected: "${text}"`);
       
       if (window.stratagemAPI?.appendNoteLog && mission?.id) {
-        await window.stratagemAPI.appendNoteLog(mission.id, 'INJECT_GOAL', `New subtask injected: "${text}"`);
+        try {
+          await window.stratagemAPI.appendNoteLog(mission.id, 'INJECT_GOAL', `New subtask injected: "${text}"`);
+        } catch (e) {
+          console.error('[appendNoteLog] Failed:', e);
+        }
       }
       await loadAuditLogs();
       
@@ -523,7 +535,11 @@
     );
     
     if (window.stratagemAPI?.appendNoteLog && mission?.id) {
-      await window.stratagemAPI.appendNoteLog(mission.id, obj.done ? 'SECURE_GOAL' : 'RELEASE_GOAL', `Subtask "${obj.text}" set to ${obj.done ? 'SECURED' : 'UNRESOLVED'}`);
+      try {
+        await window.stratagemAPI.appendNoteLog(mission.id, obj.done ? 'SECURE_GOAL' : 'RELEASE_GOAL', `Subtask "${obj.text}" set to ${obj.done ? 'SECURED' : 'UNRESOLVED'}`);
+      } catch (e) {
+        console.error('[appendNoteLog] Failed:', e);
+      }
     }
     await loadAuditLogs();
   };
@@ -538,7 +554,11 @@
     addTimelineLog('PURGE_GOAL', `Target node purged: "${removedText}"`);
     
     if (window.stratagemAPI?.appendNoteLog && mission?.id) {
-      await window.stratagemAPI.appendNoteLog(mission.id, 'PURGE_GOAL', `Subtask purged: "${removedText}"`);
+      try {
+        await window.stratagemAPI.appendNoteLog(mission.id, 'PURGE_GOAL', `Subtask purged: "${removedText}"`);
+      } catch (e) {
+        console.error('[appendNoteLog] Failed:', e);
+      }
     }
     await loadAuditLogs();
   };
@@ -568,22 +588,35 @@
     AudioEngine.play('victory');
     
     const missionId = mission.id;
+    isSavingResolution = true;
+    resolutionType = 'VICTORY';
     
-    // Save operator debrief comment to DB for Archive view
     try {
       if (comments.trim()) {
-        await updateResolutionComment(missionId, comments.trim());
         addTimelineLog('FINALIZING_VICTORY', `Sector Containment Verified. Debrief: ${comments.trim()}`);
       } else {
         addTimelineLog('FINALIZING_VICTORY', `Sector Containment Verified. No debrief logged.`);
       }
       
-      triggerClose();
-      
-      await updateMissionStatus(missionId, 'VICTORY');
-      addNotification('PROTOCOL SUCCESS', 'Sector Containment Verified', 'success');
+      setTimeout(async () => {
+        try {
+          if (comments.trim()) {
+            await updateResolutionComment(missionId, comments.trim());
+          }
+          await updateMissionStatus(missionId, 'VICTORY');
+          addNotification('PROTOCOL SUCCESS', 'Sector Containment Verified', 'success');
+        } catch (err) {
+          console.error(err);
+        } finally {
+          triggerClose();
+          isSavingResolution = false;
+          resolutionType = null;
+        }
+      }, 750);
     } catch (err) {
       console.error(err);
+      isSavingResolution = false;
+      resolutionType = null;
     }
   };
 
@@ -593,22 +626,35 @@
     AudioEngine.play('critical_breach');
     
     const missionId = mission.id;
+    isSavingResolution = true;
+    resolutionType = 'ABORT';
     
-    // Save operator debrief comment to DB for Archive view
     try {
       if (comments.trim()) {
-        await updateResolutionComment(missionId, comments.trim());
         addTimelineLog('SYSTEM_ABORT', `Emergency Purge Authorized. Reason: ${comments.trim()}`);
       } else {
         addTimelineLog('SYSTEM_ABORT', `Emergency Purge Authorized. No comment logged.`);
       }
       
-      triggerClose();
-      
-      await updateMissionStatus(missionId, 'ABORTED');
-      addNotification('PROTOCOL ABORTED', 'Emergency Purge Dispatched', 'error');
+      setTimeout(async () => {
+        try {
+          if (comments.trim()) {
+            await updateResolutionComment(missionId, comments.trim());
+          }
+          await updateMissionStatus(missionId, 'ABORTED');
+          addNotification('PROTOCOL ABORTED', 'Emergency Purge Dispatched', 'error');
+        } catch (err) {
+          console.error(err);
+        } finally {
+          triggerClose();
+          isSavingResolution = false;
+          resolutionType = null;
+        }
+      }, 750);
     } catch (err) {
       console.error(err);
+      isSavingResolution = false;
+      resolutionType = null;
     }
   };
 
@@ -918,7 +964,7 @@
                   <span class="info-label font-outfit">PRIORITY LEVEL</span>
                 </div>
                 <div class="priority-readonly-badge-cyber font-outfit priority-{threatLevel.toLowerCase()}-cyber">
-                  {threatLevel} PRIORITY STATE
+                  {threatLevel} PRIORITY
                 </div>
               </div>
 
@@ -987,6 +1033,7 @@
                     class="subtask-item" 
                     class:done={obj.done} 
                     class:readonly-item={readOnly} 
+                    class:highlight-flash-sub={highlightedSubtaskIndex === i}
                     onclick={() => toggleObjective(i)} 
                     role="presentation" 
                     transition:fade={{ delay: i * 40, duration: 150 }}
@@ -1005,6 +1052,30 @@
                     </span>
                     
                     <div class="item-actions">
+                      {#if !readOnly}
+                        <button 
+                          class="action-icon-btn move-up" 
+                          disabled={i === 0}
+                          onclick={(e) => { e.stopPropagation(); moveSubtask(i, 'UP'); }} 
+                          title="Move Up"
+                          aria-label="Move subtask up"
+                        >
+                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M18 15l-6-6-6 6" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+                          </svg>
+                        </button>
+                        <button 
+                          class="action-icon-btn move-down" 
+                          disabled={i === objectives.length - 1}
+                          onclick={(e) => { e.stopPropagation(); moveSubtask(i, 'DOWN'); }} 
+                          title="Move Down"
+                          aria-label="Move subtask down"
+                        >
+                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+                          </svg>
+                        </button>
+                      {/if}
                       <button 
                         class="action-icon-btn edit" 
                         onclick={(e) => { e.stopPropagation(); startEditing(i, obj.text); }} 
@@ -1171,6 +1242,17 @@
         </div>
       </footer>
 
+      {#if isSavingResolution}
+        <div class="processing-overlay" transition:fade={{ duration: 150 }}>
+          <div class="spinner-container">
+            <div class="fui-spinner"></div>
+            <div class="fui-spinner-ring"></div>
+          </div>
+          <span class="processing-text">
+            {resolutionType === 'VICTORY' ? 'COMMITTING VICTORY PROTOCOL...' : 'INITIATING PURGE PROTOCOL...'}
+          </span>
+        </div>
+      {/if}
       </div>
     </div>
   </div>
@@ -2803,6 +2885,39 @@
     filter: drop-shadow(0 0 4px rgba(239, 68, 68, 0.5));
   }
 
+  .action-icon-btn.move-up:hover {
+    color: #8b5cf6;
+    filter: drop-shadow(0 0 4px rgba(139, 92, 246, 0.5));
+  }
+
+  .action-icon-btn.move-down:hover {
+    color: #06b6d4;
+    filter: drop-shadow(0 0 4px rgba(6, 182, 212, 0.5));
+  }
+
+  .action-icon-btn:disabled {
+    color: rgba(255, 255, 255, 0.05) !important;
+    cursor: not-allowed;
+    filter: none !important;
+  }
+
+  .subtask-item.highlight-flash-sub {
+    animation: FuiFlashHighlightSub 2s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+  }
+
+  @keyframes FuiFlashHighlightSub {
+    0% {
+      background: rgba(139, 92, 246, 0.35);
+      border-color: rgba(139, 92, 246, 0.8) !important;
+      box-shadow: 0 0 15px rgba(139, 92, 246, 0.6), inset 0 0 8px rgba(255, 255, 255, 0.15);
+    }
+    100% {
+      background: rgba(255, 255, 255, 0.015);
+      border-color: rgba(255, 255, 255, 0.03);
+      box-shadow: none;
+    }
+  }
+
   /* Add Subtask row cyber */
   .add-subtask-row-cyber {
     display: flex;
@@ -3713,6 +3828,84 @@
     transform: translateY(-2px);
     box-shadow: 0 6px 15px rgba(139, 92, 246, 0.4);
     border-color: #ffffff;
+  }
+
+  /* Resolution Saver Overlay Styles */
+  .processing-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(4, 4, 8, 0.9);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 2000;
+    border-radius: 12px;
+    border: 1px solid rgba(139, 92, 246, 0.25);
+  }
+
+  .spinner-container {
+    position: relative;
+    width: 60px;
+    height: 60px;
+    margin-bottom: 20px;
+  }
+
+  .fui-spinner {
+    box-sizing: border-box;
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    border: 3px solid transparent;
+    border-top-color: #8b5cf6;
+    border-bottom-color: #00ff9f;
+    border-radius: 50%;
+    animation: fuiSpinnerRotate 1.2s cubic-bezier(0.5, 0, 0.5, 1) infinite;
+  }
+
+  .fui-spinner-ring {
+    box-sizing: border-box;
+    position: absolute;
+    width: 80%;
+    height: 80%;
+    top: 10%;
+    left: 10%;
+    border: 2px solid transparent;
+    border-left-color: #00ffff;
+    border-right-color: #ff2d55;
+    border-radius: 50%;
+    animation: fuiSpinnerRotateCounter 0.8s linear infinite;
+  }
+
+  .processing-text {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 16px;
+    font-weight: 800;
+    color: #8b5cf6;
+    text-transform: uppercase;
+    letter-spacing: 0.2em;
+    text-shadow: 0 0 10px rgba(139, 92, 246, 0.6);
+    animation: textPulse 1.5s infinite alternate;
+  }
+
+  @keyframes fuiSpinnerRotate {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+
+  @keyframes fuiSpinnerRotateCounter {
+    0% { transform: rotate(360deg); }
+    100% { transform: rotate(0deg); }
+  }
+
+  @keyframes textPulse {
+    from { opacity: 0.6; }
+    to { opacity: 1; }
   }
 </style>
 

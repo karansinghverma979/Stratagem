@@ -34,6 +34,12 @@ export function initDatabase() {
   });
 
   db.serialize(() => {
+    // Enable foreign key constraints for cascade delete support
+    db.run("PRAGMA foreign_keys = ON;");
+    // Enable WAL mode and synchronous normal for concurrency and speed
+    db.run("PRAGMA journal_mode = WAL;");
+    db.run("PRAGMA synchronous = NORMAL;");
+
     // We DO NOT drop tables here. We ensure they exist.
     
     // Config Table
@@ -57,9 +63,14 @@ export function initDatabase() {
         initiated_at TEXT,
         rescheduled_at TEXT,
         resolution_comment TEXT,
+        completed_at TEXT,
         created_at TEXT DEFAULT CURRENT_TIMESTAMP
       )
     `);
+
+    db.run(`ALTER TABLE missions ADD COLUMN completed_at TEXT`, (err) => {
+      // Ignore error if column already exists
+    });
 
     // Audit Log Table
     db.run(`
@@ -75,6 +86,8 @@ export function initDatabase() {
 
     db.run(`CREATE INDEX IF NOT EXISTS idx_missions_status ON missions(status)`);
     db.run(`CREATE INDEX IF NOT EXISTS idx_missions_created_at ON missions(created_at)`);
+    db.run(`CREATE INDEX IF NOT EXISTS idx_missions_temporal ON missions(temporal_boundary)`);
+    db.run(`CREATE INDEX IF NOT EXISTS idx_audit_mission_id ON audit_log(mission_id)`);
 
     // Table creation complete. Seeding is controlled manually by renderer boot screen choice.
   });
@@ -160,12 +173,13 @@ export function insertMission(mission) {
     const tbUpper = (temporal_boundary || '').trim().toUpperCase();
     const hasDeadline = temporal_boundary && tbUpper !== '' && tbUpper !== 'TBD' && tbUpper !== 'READY' && tbUpper !== 'DEPLOYED' && tbUpper !== 'NO DEADLINE';
     const initiatedAt = hasDeadline ? new Date().toISOString() : null;
+    const createdAt = new Date().toISOString();
 
     const query = `
-      INSERT INTO missions (title, temporal_boundary, threat_level, status, classifications, initiated_at)
-      VALUES (?, ?, ?, ?, ?, ?)
+      INSERT INTO missions (title, temporal_boundary, threat_level, status, classifications, initiated_at, created_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?)
     `;
-    db.run(query, [title, temporal_boundary, threat_level, status, classifications || '', initiatedAt], function(err) {
+    db.run(query, [title, temporal_boundary, threat_level, status, classifications || '', initiatedAt, createdAt], function(err) {
       if (err) {
         reject(err);
       } else {
@@ -181,7 +195,17 @@ export function insertMission(mission) {
 export function updateMissionStatus(id, status) {
   return new Promise((resolve, reject) => {
     if (!db) { reject(new Error('Database not initialized')); return; }
-    db.run(`UPDATE missions SET status = ? WHERE id = ?`, [status, id], (err) => {
+    
+    const isResolution = status === 'VICTORY' || status === 'ABORTED';
+    const query = isResolution 
+      ? `UPDATE missions SET status = ?, completed_at = ? WHERE id = ?`
+      : `UPDATE missions SET status = ? WHERE id = ?`;
+      
+    const params = isResolution 
+      ? [status, new Date().toISOString(), id]
+      : [status, id];
+      
+    db.run(query, params, (err) => {
       if (err) {
         reject(err);
       } else {
@@ -228,6 +252,10 @@ export function updateMissionDetails(id, title, classifications, threatLevel, de
         targetStatus = 'EXECUTION';
         if (!initiatedAt || initiatedAt === 'null' || oldDeadline === 'NO DEADLINE' || !oldDeadline) {
           targetInitiatedAt = new Date().toISOString();
+        }
+      } else {
+        if (status === 'EXECUTION' || status === 'BREACH') {
+          targetStatus = 'RAW_INTEL';
         }
       }
 
@@ -340,25 +368,58 @@ export function validateDatabase(filePath) {
   });
 }
 
+export function checkpointDatabase() {
+  return new Promise((resolve, reject) => {
+    if (!db) { resolve(); return; }
+    db.run("PRAGMA wal_checkpoint(TRUNCATE);", (err) => {
+      if (err) {
+        console.error('[Database] Checkpoint failed:', err);
+        reject(err);
+      } else {
+        console.log('[Database] Checkpoint successful.');
+        resolve();
+      }
+    });
+  });
+}
+
 export function importDatabaseFile(sourcePath) {
   return new Promise(async (resolve, reject) => {
     const validation = await validateDatabase(sourcePath);
     if (!validation.success) { resolve({ success: false, error: validation.error }); return; }
-    if (db) {
-      db.close((err) => {
-        if (err) reject(err);
-        else {
-          const dbPath = getDatabasePath();
-          fs.copyFileSync(sourcePath, dbPath);
-          initDatabase();
-          resolve({ success: true, missionCount: validation.missionCount });
+    
+    const dbPath = getDatabasePath();
+    const walPath = `${dbPath}-wal`;
+    const shmPath = `${dbPath}-shm`;
+
+    const performCopy = () => {
+      try {
+        // Safe delete of WAL/SHM files to prevent recovery corruption when mounting the imported DB
+        if (fs.existsSync(walPath)) {
+          try { fs.unlinkSync(walPath); } catch (e) { console.warn("Failed to unlink WAL file:", e); }
         }
+        if (fs.existsSync(shmPath)) {
+          try { fs.unlinkSync(shmPath); } catch (e) { console.warn("Failed to unlink SHM file:", e); }
+        }
+
+        fs.copyFileSync(sourcePath, dbPath);
+        initDatabase();
+        resolve({ success: true, missionCount: validation.missionCount });
+      } catch (err) {
+        reject(err);
+      }
+    };
+
+    if (db) {
+      // Turn off WAL mode so SQLite merges and deletes its own WAL/SHM files cleanly before closing
+      db.run("PRAGMA journal_mode = DELETE;", () => {
+        db.close(() => {
+          db = null; // Mark connection as closed
+          performCopy();
+        });
       });
     } else {
-      const dbPath = getDatabasePath();
-      fs.copyFileSync(sourcePath, dbPath);
-      initDatabase();
-      resolve({ success: true, missionCount: validation.missionCount });
+      performCopy();
     }
   });
 }
@@ -391,9 +452,13 @@ export function deleteMission(id) {
 export function appendAuditLog(missionId, action, description) {
   return new Promise((resolve, reject) => {
     if (!db) { reject(new Error('Database not open')); return; }
+    // Always store an explicit UTC ISO timestamp so the renderer can parse it
+    // correctly into local time. SQLite DEFAULT CURRENT_TIMESTAMP stores UTC
+    // plain text which JS mis-parses as local, causing ±5:30 hr drift.
+    const nowISO = new Date().toISOString();
     db.run(
-      `INSERT INTO audit_log (mission_id, action, description) VALUES (?, ?, ?)`,
-      [missionId, action, description || ''],
+      `INSERT INTO audit_log (mission_id, action, description, logged_at) VALUES (?, ?, ?, ?)`,
+      [missionId, action, description || '', nowISO],
       (err) => {
         if (err) reject(err);
         else resolve({ success: true });

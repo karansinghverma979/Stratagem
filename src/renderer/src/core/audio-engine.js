@@ -46,6 +46,17 @@ function createNoiseSource(ctx, duration) {
   }
 }
 
+let silenceTimeout = null;
+
+function resetSilenceTimer() {
+  if (silenceTimeout) clearTimeout(silenceTimeout);
+  silenceTimeout = setTimeout(() => {
+    if (audioCtx && audioCtx.state === 'running') {
+      audioCtx.suspend().catch(() => {});
+    }
+  }, 3000);
+}
+
 export const AudioEngine = {
   setAudioEnabled(val) {
     audioEnabled = val !== false;
@@ -71,6 +82,8 @@ export const AudioEngine = {
 
     const ctx = getAudioContext();
     if (!ctx) return;
+
+    resetSilenceTimer();
 
     const time = ctx.currentTime;
     const masterGain = masterGainNode;
@@ -1317,6 +1330,54 @@ export const AudioEngine = {
   playClickFeedback() {
     if (Date.now() - lastPlayTime < 50) return;
     this.play('ui-click');
+  },
+
+  playThreatFeedback(soundName = 'ui-click', threatLevel = 'MED') {
+    if (!audioEnabled) return;
+    const ctx = getAudioContext();
+    if (!ctx) return;
+    resetSilenceTimer();
+
+    const time = ctx.currentTime;
+    const level = (threatLevel || 'MED').toUpperCase();
+    let baseFreq = 500;
+    let duration = 0.08;
+
+    if (level === 'HIGH' || level === 'CRITICAL') {
+      baseFreq = 180; // Heavy sub-bass pulse
+      duration = 0.12;
+    } else if (level === 'LOW') {
+      baseFreq = 1100; // Crisp sharp chime
+      duration = 0.05;
+    }
+
+    try {
+      const osc = ctx.createOscillator();
+      const gainNode = ctx.createGain();
+      osc.type = (level === 'HIGH' || level === 'CRITICAL') ? 'sawtooth' : 'sine';
+      osc.frequency.setValueAtTime(baseFreq, time);
+      osc.frequency.exponentialRampToValueAtTime(baseFreq * 0.4, time + duration);
+
+      gainNode.gain.setValueAtTime((audioVolume || 0.8) * 0.22, time);
+      gainNode.gain.exponentialRampToValueAtTime(0.001, time + duration);
+
+      osc.connect(gainNode);
+      gainNode.connect(masterGainNode);
+      osc.start(time);
+      osc.stop(time + duration + 0.02);
+    } catch (e) {}
+  },
+
+  suspendAudio() {
+    if (audioCtx && audioCtx.state !== 'suspended') {
+      audioCtx.suspend().catch(() => {});
+    }
+  },
+
+  resumeAudio() {
+    if (audioCtx && audioCtx.state === 'suspended') {
+      audioCtx.resume().catch(() => {});
+    }
   }
 };
 

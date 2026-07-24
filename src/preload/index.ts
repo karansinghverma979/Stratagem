@@ -69,6 +69,8 @@ const osAPI = {
   exportDatabaseJSON: () => ipcRenderer.invoke('dialog:exportJSON'),
   setAlwaysOnTop: (flag: boolean) => ipcRenderer.send('window-set-always-on-top', flag),
   setKiosk: (flag: boolean) => ipcRenderer.send('window-set-kiosk', flag),
+  toggleStasis: (active?: boolean) => ipcRenderer.invoke('app-toggle-stasis', active),
+  getStasisState: () => ipcRenderer.invoke('app-get-stasis-state'),
   onResizeAttempt: (callback: () => void) => {
     const listener = () => callback()
     ipcRenderer.on('window-resize-attempt', listener)
@@ -108,4 +110,12 @@ ipcRenderer.on('dev-refresh-asset', () => {
 
 ipcRenderer.on('aigirl-refresh-asset', () => {
   window.dispatchEvent(new CustomEvent('aigirl-refresh-asset'))
+})
+
+ipcRenderer.on('stasis-state-changed', (_event, active: boolean) => {
+  window.dispatchEvent(new CustomEvent('stasis-state-changed', { detail: { active } }))
+})
+
+ipcRenderer.on('power-mode-changed', (_event, mode: string) => {
+  window.dispatchEvent(new CustomEvent('power-mode-changed', { detail: { mode } }))
 })

@@ -1,6 +1,6 @@
 {
   "name": "n0-furnace",
-  "version": "2.3.0",
+  "version": "3.0.0",
   "description": "An Electron application with Svelte and TypeScript",
   "main": "./out/main/index.js",
   "author": "Karan Singh Verma",

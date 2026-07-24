@@ -13,11 +13,49 @@ export const AntaryamiState = writable({
   notecardsClickCount: 0,
   nudeClicksRemaining: 0,
   appLaunchOnStartup: false,
+  autoSleepEnabled: true,
+  autoSleepTimeoutMinutes: 5,
+  batteryStealthEnabled: true,
+  tacticalNavEnabled: true,
+  fastColdBoot: false,
   githubUrl: 'https://github.com/karansinghverma979/',
   emailAddress: 'karansinghverma979@gmail.com',
   linkedinUrl: 'https://www.linkedin.com/in/karansinghverma979/',
   nudeBypassAllowed: false,
   isPackaged: false
+});
+
+export const isStasisActive = writable(false);
+export const isBatteryStealthMode = writable(false);
+
+isBatteryStealthMode.subscribe(stealth => {
+  if (typeof document !== 'undefined') {
+    if (stealth) {
+      document.body.classList.add('battery-stealth-mode');
+    } else {
+      document.body.classList.remove('battery-stealth-mode');
+    }
+  }
+});
+
+export function toggleStasisMode(active) {
+  if (typeof window !== 'undefined' && window.osAPI && typeof window.osAPI.toggleStasis === 'function') {
+    window.osAPI.toggleStasis(active);
+  } else {
+    isStasisActive.update(curr => typeof active === 'boolean' ? active : !curr);
+  }
+}
+
+isStasisActive.subscribe(active => {
+  if (typeof document !== 'undefined') {
+    if (active) {
+      document.body.classList.add('stasis-suspended');
+      AudioEngine.suspendAudio();
+    } else {
+      document.body.classList.remove('stasis-suspended');
+      AudioEngine.resumeAudio();
+    }
+  }
 });
 
 // Only push audio settings to the engine when those specific fields change.

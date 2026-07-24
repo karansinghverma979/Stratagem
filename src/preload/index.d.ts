@@ -55,6 +55,8 @@ declare global {
       importDatabase: () => Promise<any>
       openInExplorer: (path: string) => Promise<any>
       exportDatabaseJSON: () => Promise<any>
+      toggleStasis: (active?: boolean) => Promise<boolean>
+      getStasisState: () => Promise<boolean>
       onResizeAttempt: (callback: () => void) => void
     }
   }

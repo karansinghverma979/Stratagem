@@ -208,7 +208,90 @@
       {/if}
     </div>
 
-    <!-- Row 2: Security & Lockouts -->
+    <!-- Row 2: Cyber-Stasis & Power Saver Protocol -->
+    <div class="setting-group-card">
+      <div class="card-header-row">
+        <GenesisToggle 
+          checked={$AntaryamiState.autoSleepEnabled !== false} 
+          label="IDLE AUTO-STASIS HYBERNATION PROTOCOL" 
+          onchange={(val) => handleToggle('autoSleepEnabled', val)}
+        />
+        <span class="stasis-hotkey-badge font-mono text-cyan">
+          MANUAL HOTKEY: CTRL + ALT + S
+        </span>
+      </div>
+      <p class="card-caption">
+        Automatically halts GPU keyframe loops, audio context nodes, and background reactivity timers when idle to drop CPU/GPU load to 0%.
+      </p>
+      
+      {#if $AntaryamiState.autoSleepEnabled !== false}
+        <div class="stasis-options-row">
+          <span class="stasis-label font-outfit">IDLE SLEEP TIMEOUT:</span>
+          <div class="stasis-pills-grid">
+            {#each [1, 3, 5, 10, 15] as mins}
+              <button 
+                class="stasis-pill-btn font-mono" 
+                class:active={($AntaryamiState.autoSleepTimeoutMinutes || 5) === mins}
+                onclick={() => {
+                  AntaryamiState.update(s => ({ ...s, autoSleepTimeoutMinutes: mins }));
+                  updateConfig('autoSleepTimeoutMinutes', mins);
+                  AudioEngine.play('ui-click');
+                }}
+              >
+                {mins} MIN{mins > 1 ? 'S' : ''}
+              </button>
+            {/each}
+          </div>
+        </div>
+      {/if}
+    </div>
+
+    <!-- Row 3: Battery Stealth HUD -->
+    <div class="setting-group-card">
+      <div class="card-header-row">
+        <GenesisToggle 
+          checked={$AntaryamiState.batteryStealthEnabled !== false} 
+          label="STEALTH HUD BATTERY SAVER MODE" 
+          onchange={(val) => handleToggle('batteryStealthEnabled', val)}
+        />
+      </div>
+      <p class="card-caption">
+        Automatically lowers GPU blur rendering and stops orb physics when running on laptop battery power.
+      </p>
+    </div>
+
+    <!-- Row 4: Tactical Keyboard Navigation -->
+    <div class="setting-group-card">
+      <div class="card-header-row">
+        <GenesisToggle 
+          checked={$AntaryamiState.tacticalNavEnabled !== false} 
+          label="TACTICAL KEYBOARD NAVIGATION PROTOCOL" 
+          onchange={(val) => handleToggle('tacticalNavEnabled', val)}
+        />
+        <span class="stasis-hotkey-badge font-mono text-cyan">
+          KEYS: J / K / ENTER / SPACE
+        </span>
+      </div>
+      <p class="card-caption">
+        Navigate task rows with J (down) and K (up), open protocols with ENTER, and check objectives with SPACE without reaching for the mouse.
+      </p>
+    </div>
+
+    <!-- Row 5: Fast Cold Boot Protocol -->
+    <div class="setting-group-card">
+      <div class="card-header-row">
+        <GenesisToggle 
+          checked={$AntaryamiState.fastColdBoot || false} 
+          label="FAST COLD BOOT PROTOCOL (<200ms)" 
+          onchange={(val) => handleToggle('fastColdBoot', val)}
+        />
+      </div>
+      <p class="card-caption">
+        Bypasses simulated cold boot sequence on launch for immediate, zero-delay terminal entry.
+      </p>
+    </div>
+
+    <!-- Row 3: Security & Lockouts -->
     <div class="security-grid-row">
       <!-- Deep Focus -->
       <div class="setting-group-card half-card">
@@ -494,8 +577,30 @@
     flex-direction: column;
     gap: 20px;
     flex: 1;
-    overflow-y: hidden;
+    overflow-y: auto;
+    padding-right: 8px;
     margin-top: 24px;
+  }
+
+  .settings-content::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  .settings-content::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.02);
+    border-radius: 4px;
+  }
+
+  .settings-content::-webkit-scrollbar-thumb {
+    background: rgba(139, 92, 246, 0.3);
+    border-radius: 4px;
+    border: 1px solid rgba(139, 92, 246, 0.4);
+    box-shadow: 0 0 10px rgba(139, 92, 246, 0.3);
+  }
+
+  .settings-content::-webkit-scrollbar-thumb:hover {
+    background: rgba(139, 92, 246, 0.6);
+    box-shadow: 0 0 15px rgba(139, 92, 246, 0.6);
   }
 
   .setting-group-card {
@@ -535,6 +640,59 @@
     color: rgba(255, 255, 255, 0.4);
     line-height: 1.4;
     padding-left: 64px;
+  }
+
+  .stasis-hotkey-badge {
+    font-size: 10px;
+    padding: 3px 10px;
+    background: rgba(6, 182, 212, 0.1);
+    border: 1px solid rgba(6, 182, 212, 0.3);
+    border-radius: 12px;
+    letter-spacing: 1px;
+    box-shadow: 0 0 10px rgba(6, 182, 212, 0.15);
+  }
+
+  .stasis-options-row {
+    padding-left: 64px;
+    margin-top: 10px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .stasis-label {
+    font-size: 10px;
+    color: rgba(255, 255, 255, 0.4);
+    letter-spacing: 1px;
+  }
+
+  .stasis-pills-grid {
+    display: flex;
+    gap: 8px;
+  }
+
+  .stasis-pill-btn {
+    padding: 4px 12px;
+    font-size: 10px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    color: rgba(255, 255, 255, 0.6);
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+
+  .stasis-pill-btn:hover {
+    background: rgba(139, 92, 246, 0.15);
+    border-color: rgba(139, 92, 246, 0.4);
+    color: #fff;
+  }
+
+  .stasis-pill-btn.active {
+    background: rgba(139, 92, 246, 0.3);
+    border-color: rgba(139, 92, 246, 0.8);
+    color: #fff;
+    box-shadow: 0 0 12px rgba(139, 92, 246, 0.4);
   }
 
   .audio-sliders-container {

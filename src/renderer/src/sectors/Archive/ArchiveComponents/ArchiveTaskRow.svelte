@@ -140,6 +140,8 @@
     border: 1px solid rgba(139, 92, 246, 0.12);
     will-change: transform;
     isolation: isolate;
+    content-visibility: auto;
+    contain-intrinsic-size: 1px 116px;
   }
 
   /* ── Glassmorphic card base ── */

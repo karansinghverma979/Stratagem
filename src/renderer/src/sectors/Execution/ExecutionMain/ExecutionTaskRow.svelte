@@ -32,13 +32,13 @@
   };
 
   const handleRowClick = () => {
-    AudioEngine.play('ui-click');
+    AudioEngine.playThreatFeedback('ui-click', task.threat_level || task.threat || 'MED');
     onprotocolclick && onprotocolclick(task);
   };
 
   const handleMouseEnter = () => {
     isHovered = true;
-    AudioEngine.play('ui-hover');
+    AudioEngine.playThreatFeedback('ui-hover', task.threat_level || task.threat || 'MED');
   };
 
   const handleMouseLeave = () => {
@@ -225,6 +225,8 @@
     border: 1px solid rgba(139, 92, 246, 0.12); /* Clean themed border */
     will-change: transform;
     isolation: isolate;
+    content-visibility: auto;
+    contain-intrinsic-size: 1px 116px;
   }
 
   /* Glassmorphic card base */

@@ -210,6 +210,8 @@
     border: none;
     border-bottom: 1px solid rgba(255, 45, 85, 0.08);
     width: 100%;
+    content-visibility: auto;
+    contain-intrinsic-size: 1px 116px;
   }
 
   .breach-task-row:hover,

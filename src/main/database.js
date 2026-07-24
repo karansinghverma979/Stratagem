@@ -68,13 +68,12 @@ export function initDatabase() {
       )
     `);
 
-    db.run(`ALTER TABLE missions ADD COLUMN completed_at TEXT`, (err) => {
-      // Ignore error if column already exists
-    });
-
-    db.run(`ALTER TABLE missions ADD COLUMN reschedule_count INTEGER DEFAULT 0`, (err) => {
-      // Ignore error if column already exists
-    });
+    db.run(`ALTER TABLE missions ADD COLUMN is_rescheduled INTEGER DEFAULT 0`, () => {});
+    db.run(`ALTER TABLE missions ADD COLUMN initiated_at TEXT`, () => {});
+    db.run(`ALTER TABLE missions ADD COLUMN rescheduled_at TEXT`, () => {});
+    db.run(`ALTER TABLE missions ADD COLUMN resolution_comment TEXT`, () => {});
+    db.run(`ALTER TABLE missions ADD COLUMN completed_at TEXT`, () => {});
+    db.run(`ALTER TABLE missions ADD COLUMN reschedule_count INTEGER DEFAULT 0`, () => {});
 
     // Audit Log Table
     db.run(`
@@ -736,8 +735,8 @@ export function mergeDatabaseFile(sourcePath) {
                 }
 
                 db.run(
-                  `INSERT INTO missions (title, temporal_boundary, threat_level, status, classifications, is_rescheduled, initiated_at, rescheduled_at, resolution_comment, created_at)
-                   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+                  `INSERT INTO missions (title, temporal_boundary, threat_level, status, classifications, is_rescheduled, initiated_at, rescheduled_at, resolution_comment, completed_at, reschedule_count, created_at)
+                   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
                   [
                     row.title,
                     row.temporal_boundary,
@@ -748,6 +747,8 @@ export function mergeDatabaseFile(sourcePath) {
                     row.initiated_at,
                     row.rescheduled_at,
                     row.resolution_comment,
+                    row.completed_at || null,
+                    row.reschedule_count || 0,
                     row.created_at
                   ],
                   function(err4) {
@@ -790,6 +791,19 @@ export function mergeDatabaseFile(sourcePath) {
               }
             );
           });
+        });
+      });
+    });
+  });
+}
+
+export function vacuumDatabase() {
+  return new Promise((resolve) => {
+    if (!db) { resolve(false); return; }
+    db.serialize(() => {
+      db.run("PRAGMA incremental_vacuum;", () => {
+        db.run("PRAGMA wal_checkpoint(TRUNCATE);", () => {
+          resolve(true);
         });
       });
     });

@@ -296,6 +296,8 @@
       box-shadow 0.28s ease;
     will-change: transform;
     isolation: isolate;
+    content-visibility: auto;
+    contain-intrinsic-size: 1px 116px;
   }
 
   .task-row.non-clickable { cursor: default; }

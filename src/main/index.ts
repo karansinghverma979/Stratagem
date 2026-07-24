@@ -1,5 +1,6 @@
-import { app, shell, BrowserWindow, ipcMain, dialog, screen } from 'electron'
+import { app, shell, BrowserWindow, ipcMain, dialog, screen, globalShortcut, powerMonitor, net, protocol } from 'electron'
 import { join, extname } from 'path'
+import { pathToFileURL } from 'url'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
 import fs from 'fs'
@@ -17,11 +18,40 @@ import {
   mergeDatabaseFile,
   seedDatabase,
   getDatabasePath,
-  checkpointDatabase
+  checkpointDatabase,
+  vacuumDatabase
 } from './database'
 import { getRegistryValue } from './registry'
 
+try {
+  protocol.registerSchemesAsPrivileged([
+    { scheme: 'stratagem', privileges: { secure: true, standard: true, supportFetchAPI: true, corsEnabled: true } }
+  ])
+} catch (e) {}
+
 let mainWindow: BrowserWindow | null = null
+let isStasisActive = false
+
+function toggleStasis(active?: boolean): boolean {
+  if (typeof active === 'boolean') {
+    isStasisActive = active
+  } else {
+    isStasisActive = !isStasisActive
+  }
+
+  if (isStasisActive) {
+    fileCache.clear()
+    if (typeof global.gc === 'function') {
+      try { global.gc() } catch (e) {}
+    }
+  }
+
+  if (mainWindow && !mainWindow.isDestroyed()) {
+    mainWindow.webContents.send('stasis-state-changed', isStasisActive)
+  }
+
+  return isStasisActive
+}
 
 interface CacheEntry {
   mtime: number
@@ -205,6 +235,26 @@ function createWindow(): void {
   win.on('ready-to-show', () => {
     win.show()
     win.maximize()
+  })
+
+  win.on('minimize', () => {
+    toggleStasis(true)
+  })
+
+  win.on('restore', () => {
+    toggleStasis(false)
+  })
+
+  win.on('blur', () => {
+    if (mainWindow && !mainWindow.isDestroyed()) {
+      mainWindow.webContents.send('window-blur')
+    }
+  })
+
+  win.on('focus', () => {
+    if (mainWindow && !mainWindow.isDestroyed()) {
+      mainWindow.webContents.send('window-focus')
+    }
   })
 
   // Intercept default shortcut input events to strictly prevent escaping fullscreen
@@ -1250,6 +1300,83 @@ if (!gotTheLock) {
     }
   })
 
+  ipcMain.handle('app-toggle-stasis', (_event, active?: boolean) => {
+    return toggleStasis(active)
+  })
+
+  ipcMain.handle('app-get-stasis-state', () => {
+    return isStasisActive
+  })
+
+  // Global Keyboard Shortcut: Ctrl + Alt + S (or Cmd + Alt + S on macOS)
+  try {
+    globalShortcut.register('CommandOrControl+Alt+S', () => {
+      toggleStasis()
+    })
+  } catch (err) {
+    console.warn('Failed to register global shortcut CommandOrControl+Alt+S:', err)
+  }
+
+  // Native Power & System Idle Detection
+  try {
+    powerMonitor.on('suspend', () => {
+      toggleStasis(true)
+    })
+    powerMonitor.on('resume', () => {
+      toggleStasis(false)
+    })
+    powerMonitor.on('lock-screen', () => {
+      toggleStasis(true)
+    })
+    powerMonitor.on('unlock-screen', () => {
+      toggleStasis(false)
+    })
+    powerMonitor.on('on-battery', () => {
+      if (mainWindow && !mainWindow.isDestroyed()) {
+        mainWindow.webContents.send('power-mode-changed', 'battery')
+      }
+    })
+    powerMonitor.on('on-ac', () => {
+      if (mainWindow && !mainWindow.isDestroyed()) {
+        mainWindow.webContents.send('power-mode-changed', 'ac')
+      }
+    })
+  } catch (err) {
+    console.warn('Failed to attach powerMonitor listeners:', err)
+  }
+
+  // Register Custom Asset Protocol (stratagem://) for zero-copy streaming
+  try {
+    protocol.handle('stratagem', (request) => {
+      try {
+        const url = new URL(request.url)
+        const host = url.hostname
+        const pathname = decodeURIComponent(url.pathname)
+
+        let targetDir = ''
+        if (host === 'dev' || host === 'devimages') {
+          targetDir = getDevImagesDir()
+        } else if (host === 'notecards') {
+          targetDir = getNoteCardsDir()
+        } else if (host === 'nudity') {
+          targetDir = getNudityDir()
+        } else {
+          targetDir = resolveAIGirlFolderPath(host)
+        }
+
+        const fullPath = join(targetDir, pathname)
+        if (fs.existsSync(fullPath)) {
+          return net.fetch(pathToFileURL(fullPath).toString())
+        }
+        return new Response('Asset not found', { status: 404 })
+      } catch (err: any) {
+        return new Response(err.message, { status: 500 })
+      }
+    })
+  } catch (err) {
+    console.warn('Failed to register stratagem protocol handler:', err)
+  }
+
   // Check for uninstaller backup argument
   const backupFlagIndex = process.argv.indexOf('--uninstall-backup')
   if (backupFlagIndex !== -1 && backupFlagIndex + 1 < process.argv.length) {
@@ -1268,6 +1395,13 @@ if (!gotTheLock) {
 
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') app.quit()
+})
+
+app.on('will-quit', async () => {
+  try {
+    globalShortcut.unregisterAll()
+    await vacuumDatabase()
+  } catch (e) {}
 })
 
 function seedQuotesDir() {

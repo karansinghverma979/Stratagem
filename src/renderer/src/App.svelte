@@ -21,7 +21,7 @@
   import MementoPopup from './sectors/Genesis/GenesisMain/DeveloperPanel/MementoPopup.svelte';
   import ReasonPopup from './sectors/Genesis/GenesisMain/DeveloperPanel/ReasonPopup.svelte';
   import MentalSkillsPopup from './sectors/Genesis/GenesisMain/DeveloperPanel/MentalSkillsPopup.svelte';
-  import { AntaryamiState, syncAntaryami, breachedTasks, notifications, isTaskViewOpen, startAutoSync, stopAutoSync, isNeuralUplinkOpen, neuralUplinkLogs, loadNeuralUplinkLogs, activeStrategizeTask, onNoteSavedCallback, isPurgeModalOpen, taskToPurge, deleteMission, arsenalTasks, addNotification, currentSector as currentSectorStore } from './core/store';
+  import { AntaryamiState, syncAntaryami, breachedTasks, notifications, isTaskViewOpen, startAutoSync, stopAutoSync, isNeuralUplinkOpen, neuralUplinkLogs, loadNeuralUplinkLogs, activeStrategizeTask, onNoteSavedCallback, isPurgeModalOpen, taskToPurge, deleteMission, arsenalTasks, addNotification, currentSector as currentSectorStore, isStasisActive, toggleStasisMode, isBatteryStealthMode } from './core/store';
   import { chronosStore } from './core/chronos-store';
   import { AudioEngine } from './core/audio-engine';
   import StrategizeModal from './sectors/Arsenal/ArsenalMain/StrategizeModal.svelte';
@@ -144,49 +144,58 @@
     purpleTimeouts.push(t1);
   }
 
+  let mouseMoveRaf: number | null = null;
+
   function handleMouseMove(e: MouseEvent) {
-    if (isAnyModalActive) {
-      isMouseStationary = false;
-      showSixEyes = false;
-      if (mouseStopTimeout) clearTimeout(mouseStopTimeout);
-      if (sixEyesDurationTimeout) clearTimeout(sixEyesDurationTimeout);
-      return;
-    }
-
-    cursorX = e.clientX;
-    cursorY = e.clientY;
-    isMouseStationary = false;
-    showSixEyes = false;
-
-    if (mouseStopTimeout) clearTimeout(mouseStopTimeout);
-    if (sixEyesDurationTimeout) clearTimeout(sixEyesDurationTimeout);
-
+    if (mouseMoveRaf) return;
+    const clientX = e.clientX;
+    const clientY = e.clientY;
     const target = e.target as HTMLElement;
 
-    mouseStopTimeout = setTimeout(() => {
-      // Cancel showing eyes if hovering over any clickable/interactive elements
-      if (target) {
-        const onInteractive = target.closest('button, input, select, textarea, [role="button"], a, .dev-portrait-img, .portrait-ring-container, .omni-scope-terminal, .skill-card, .tab-btn, .close-btn, .dismiss-btn') ||
-                              window.getComputedStyle(target).cursor === 'pointer';
-        if (onInteractive) {
-          return;
+    mouseMoveRaf = requestAnimationFrame(() => {
+      mouseMoveRaf = null;
+
+      if (isAnyModalActive) {
+        isMouseStationary = false;
+        showSixEyes = false;
+        if (mouseStopTimeout) clearTimeout(mouseStopTimeout);
+        if (sixEyesDurationTimeout) clearTimeout(sixEyesDurationTimeout);
+        return;
+      }
+
+      cursorX = clientX;
+      cursorY = clientY;
+      isMouseStationary = false;
+      showSixEyes = false;
+
+      if (mouseStopTimeout) clearTimeout(mouseStopTimeout);
+      if (sixEyesDurationTimeout) clearTimeout(sixEyesDurationTimeout);
+
+      mouseStopTimeout = setTimeout(() => {
+        // Cancel showing eyes if hovering over any clickable/interactive elements
+        if (target) {
+          const onInteractive = target.closest('button, input, select, textarea, [role="button"], a, .dev-portrait-img, .portrait-ring-container, .omni-scope-terminal, .skill-card, .tab-btn, .close-btn, .dismiss-btn') ||
+                                window.getComputedStyle(target).cursor === 'pointer';
+          if (onInteractive) {
+            return;
+          }
         }
-      }
 
-      const isAnyPopupOpen = isMentalSkillsPopupOpen || isDevPopupOpen || isRigorePopupOpen || 
-                            isMementoPopupOpen || isReasonPopupOpen || isSukunaDomainActive || 
-                            isHollowPurpleRunning || isInfinityRunning;
+        const isAnyPopupOpen = isMentalSkillsPopupOpen || isDevPopupOpen || isRigorePopupOpen || 
+                              isMementoPopupOpen || isReasonPopupOpen || isSukunaDomainActive || 
+                              isHollowPurpleRunning || isInfinityRunning;
 
-      if (systemBooted && !isAnyPopupOpen) {
-        isMouseStationary = true;
-        showSixEyes = true;
+        if (systemBooted && !isAnyPopupOpen) {
+          isMouseStationary = true;
+          showSixEyes = true;
 
-        // Auto hide the Six Eyes cursor after max 6 seconds
-        sixEyesDurationTimeout = setTimeout(() => {
-          showSixEyes = false;
-        }, 6000);
-      }
-    }, 500);
+          // Auto hide the Six Eyes cursor after max 6 seconds
+          sixEyesDurationTimeout = setTimeout(() => {
+            showSixEyes = false;
+          }, 6000);
+        }
+      }, 500);
+    });
   }
 
   function handleDevOpenPopup(e: Event) {
@@ -319,6 +328,11 @@ Please execute the Recommended Realignment Path or authorize a purge.
       const config = await window.stratagemAPI.getConfig();
       if (config) {
         AntaryamiState.update(state => ({ ...state, ...config }));
+        if (config.fastColdBoot) {
+          systemBooted = true;
+          isRetrying = false;
+          return;
+        }
       }
     } catch (e) {
       console.log('[Boot] Database config not loaded yet, using defaults.');
@@ -450,8 +464,47 @@ Please execute the Recommended Realignment Path or authorize a purge.
       AudioEngine.playClickFeedback();
     }
   }
+  let autoSleepTimer: any = null;
+
+  function resetAutoSleepTimer() {
+    if (autoSleepTimer) clearTimeout(autoSleepTimer);
+    if ($isStasisActive) return;
+
+    const state = $AntaryamiState;
+    if (!state || state.autoSleepEnabled === false) return;
+
+    const mins = state.autoSleepTimeoutMinutes || 5;
+    autoSleepTimer = setTimeout(() => {
+      toggleStasisMode(true);
+    }, mins * 60 * 1000);
+  }
+
+  function handleStasisStateChanged(e: any) {
+    const active = !!(e && e.detail && e.detail.active);
+    isStasisActive.set(active);
+    if (!active) {
+      resetAutoSleepTimer();
+    }
+  }
+
+  function handleUserInteraction() {
+    if ($isStasisActive) {
+      toggleStasisMode(false);
+    }
+    resetAutoSleepTimer();
+  }
 
   function handleGlobalKeyDown(e: KeyboardEvent) {
+    handleUserInteraction();
+
+    // Check for Ctrl+Alt+S shortcut for Cyber-Stasis
+    if (e.ctrlKey && e.altKey && (e.code === 'KeyS' || e.key.toLowerCase() === 's')) {
+      e.preventDefault();
+      AudioEngine.play('data-lock');
+      toggleStasisMode();
+      return;
+    }
+
     // Check for Ctrl+Alt+I shortcut (using both code and key for absolute keyboard layout compatibility)
     if (e.ctrlKey && e.altKey && (e.code === 'KeyI' || e.key.toLowerCase() === 'i')) {
       e.preventDefault();
@@ -479,15 +532,14 @@ Please execute the Recommended Realignment Path or authorize a purge.
     
     try {
       await deleteMission(task.id);
-      window.dispatchEvent(new CustomEvent('synth-purged', { detail: { taskId: task.id } }));
-      addNotification('SYNAPSE THREAD PURGED', `The weapon template "${task.title.toUpperCase()}" has been permanently erased from the Arsenal matrix`, 'success');
+      addNotification('SYNTHESIZING PURGE SUCCESS', `Task "${task.title}" purged from core memory.`, 'success');
+      AudioEngine.play('purge-boom');
     } catch (err: any) {
-      console.error('Failed to purge synthesizing task:', err);
-      await syncAntaryami(true);
-      addNotification('PURGE ACTION INTERRUPTED', `An error occurred while deleting task: ${err.message || err}`, 'error');
+      addNotification('PURGE FAILURE', err?.message || 'Failed to purge synthesizing task.', 'error');
+    } finally {
+      isPurgeModalOpen.set(false);
+      taskToPurge.set(null);
     }
-    isPurgeModalOpen.set(false);
-    taskToPurge.set(null);
   }
 
   function cancelSynthPurge() {
@@ -495,12 +547,53 @@ Please execute the Recommended Realignment Path or authorize a purge.
     taskToPurge.set(null);
   }
 
+  let scrollThrottleTimer: any = null;
+
+  function handleScrollThrottle() {
+    if (!document.body.classList.contains('is-scrolling')) {
+      document.body.classList.add('is-scrolling');
+    }
+    if (scrollThrottleTimer) clearTimeout(scrollThrottleTimer);
+    scrollThrottleTimer = setTimeout(() => {
+      document.body.classList.remove('is-scrolling');
+    }, 150);
+  }
+
+  function handlePowerModeChanged(e: any) {
+    const mode = e?.detail?.mode;
+    if (mode === 'battery') {
+      if ($AntaryamiState.batteryStealthEnabled !== false) {
+        isBatteryStealthMode.set(true);
+      }
+    } else {
+      isBatteryStealthMode.set(false);
+    }
+  }
+
+  function handleWindowBlur() {
+    AudioEngine.suspendAudio();
+  }
+
+  function handleWindowFocus() {
+    if (!$isStasisActive) {
+      AudioEngine.resumeAudio();
+    }
+  }
+
   onMount(async () => {
     await runBootSequence();
     loadNeuralUplinkLogs();
+    resetAutoSleepTimer();
     window.addEventListener('wheel', handleGlobalWheel, { passive: true });
+    window.addEventListener('scroll', handleScrollThrottle, { capture: true, passive: true });
     window.addEventListener('click', handleGlobalClick, { capture: true, passive: true });
     window.addEventListener('keydown', handleGlobalKeyDown);
+    window.addEventListener('mousemove', handleUserInteraction, { passive: true });
+    window.addEventListener('mousedown', handleUserInteraction, { passive: true });
+    window.addEventListener('stasis-state-changed', handleStasisStateChanged);
+    window.addEventListener('power-mode-changed', handlePowerModeChanged);
+    window.addEventListener('window-blur', handleWindowBlur);
+    window.addEventListener('window-focus', handleWindowFocus);
     window.addEventListener('dev-open-popup', handleDevOpenPopup);
     window.addEventListener('dev-trigger-hollow-purple', handleTriggerHollowPurple);
     window.addEventListener('sukuna-domain-close-active', handleSukunaDomainCloseActive);
@@ -508,12 +601,21 @@ Please execute the Recommended Realignment Path or authorize a purge.
 
   onDestroy(() => {
     stopAutoSync();
+    if (autoSleepTimer) clearTimeout(autoSleepTimer);
+    if (scrollThrottleTimer) clearTimeout(scrollThrottleTimer);
     if (mouseStopTimeout) clearTimeout(mouseStopTimeout);
     if (sixEyesDurationTimeout) clearTimeout(sixEyesDurationTimeout);
     purpleTimeouts.forEach(t => clearTimeout(t));
     window.removeEventListener('wheel', handleGlobalWheel);
+    window.removeEventListener('scroll', handleScrollThrottle, { capture: true });
     window.removeEventListener('click', handleGlobalClick);
     window.removeEventListener('keydown', handleGlobalKeyDown);
+    window.removeEventListener('mousemove', handleUserInteraction);
+    window.removeEventListener('mousedown', handleUserInteraction);
+    window.removeEventListener('stasis-state-changed', handleStasisStateChanged);
+    window.removeEventListener('power-mode-changed', handlePowerModeChanged);
+    window.removeEventListener('window-blur', handleWindowBlur);
+    window.removeEventListener('window-focus', handleWindowFocus);
     window.removeEventListener('dev-open-popup', handleDevOpenPopup);
     window.removeEventListener('dev-trigger-hollow-purple', handleTriggerHollowPurple);
     window.removeEventListener('mousemove', handleMouseMove);
@@ -685,69 +787,71 @@ Please execute the Recommended Realignment Path or authorize a purge.
     
     <TopNavigation bind:currentSector={currentSector} onlogoclick={() => isHubOpen = true} hasBreached={$breachedTasks.length > 0} />
 
-    <main class="main-viewport" class:system-suspended={isAnyRootModalActive} style:display={isAnyRootModalActive ? 'none' : 'flex'} in:fade={{ delay: 100, duration: 250 }}>
-      {#if currentSector === 'Execution'}
-        <div class="sector-wrapper" style:display="flex">
-          <ExecutionSector />
-        </div>
-      {/if}
-
-      {#if currentSector === 'Chronos'}
-        <div class="sector-wrapper" style:display="flex">
-          <ChronosSector />
-        </div>
-      {/if}
-
-      {#if currentSector === 'Genesis'}
-        <div class="sector-wrapper" style:display="flex">
-          <GenesisSector />
-        </div>
-      {/if}
-
-      {#if currentSector === 'Breach'}
-        <div class="sector-wrapper" style:display="flex">
-          <BreachSector 
-            onopenreschedule={(task) => {
-              forgeInitialTask = task;
-              isRescheduleMode = true;
-              isForgeOpen = true;
-            }}
-          />
-        </div>
-      {/if}
-
-      {#if currentSector === 'Arsenal'}
-        <div class="sector-wrapper" style:display="flex">
-          <ArsenalBoard 
-            onweaponize={(card) => {
-              forgeInitialTask = card;
-              forgeInitialDesignation = card.title;
-              isForgeOpen = true;
-            }}
-            onopenforge={(task) => {
-              forgeInitialTask = task;
-              isForgeOpen = true;
-            }}
-          />
-        </div>
-      {/if}
-
-      {#if currentSector === 'Archive'}
-        <div class="sector-wrapper" style:display="flex">
-          <ArchiveSector />
-        </div>
-      {/if}
-
-      <!-- Other sector stubs display a subtle maintenance panel -->
-      {#if !['Execution', 'Chronos', 'Genesis', 'Breach', 'Arsenal', 'Archive'].includes(currentSector)}
-        <div class="maintenance-view">
-          <div class="maintenance-box">
-            <h2 class="maintenance-title font-outfit">SECTOR ACCESS UNDER DEVELOPMENT</h2>
-            <p class="maintenance-subtitle font-inter">EXTERNAL SUB-LINK &bull; SECTOR PROTOCOLS ARE CURRENTLY LOCKED BY COMMAND AUTHORITY</p>
+    {#if !isAnyRootModalActive}
+      <main class="main-viewport" in:fade={{ delay: 100, duration: 250 }}>
+        {#if currentSector === 'Execution'}
+          <div class="sector-wrapper" style:display="flex">
+            <ExecutionSector />
           </div>
-        </div>
-      {/if}
-    </main>
+        {/if}
+
+        {#if currentSector === 'Chronos'}
+          <div class="sector-wrapper" style:display="flex">
+            <ChronosSector />
+          </div>
+        {/if}
+
+        {#if currentSector === 'Genesis'}
+          <div class="sector-wrapper" style:display="flex">
+            <GenesisSector />
+          </div>
+        {/if}
+
+        {#if currentSector === 'Breach'}
+          <div class="sector-wrapper" style:display="flex">
+            <BreachSector 
+              onopenreschedule={(task) => {
+                forgeInitialTask = task;
+                isRescheduleMode = true;
+                isForgeOpen = true;
+              }}
+            />
+          </div>
+        {/if}
+
+        {#if currentSector === 'Arsenal'}
+          <div class="sector-wrapper" style:display="flex">
+            <ArsenalBoard 
+              onweaponize={(card) => {
+                forgeInitialTask = card;
+                forgeInitialDesignation = card.title;
+                isForgeOpen = true;
+              }}
+              onopenforge={(task) => {
+                forgeInitialTask = task;
+                isForgeOpen = true;
+              }}
+            />
+          </div>
+        {/if}
+
+        {#if currentSector === 'Archive'}
+          <div class="sector-wrapper" style:display="flex">
+            <ArchiveSector />
+          </div>
+        {/if}
+
+        <!-- Other sector stubs display a subtle maintenance panel -->
+        {#if !['Execution', 'Chronos', 'Genesis', 'Breach', 'Arsenal', 'Archive'].includes(currentSector)}
+          <div class="maintenance-view">
+            <div class="maintenance-box">
+              <h2 class="maintenance-title font-outfit">SECTOR ACCESS UNDER DEVELOPMENT</h2>
+              <p class="maintenance-subtitle font-inter">EXTERNAL SUB-LINK &bull; SECTOR PROTOCOLS ARE CURRENTLY LOCKED BY COMMAND AUTHORITY</p>
+            </div>
+          </div>
+        {/if}
+      </main>
+    {/if}
 
     <TaskForgeButton onclick={() => {
       forgeInitialDesignation = '';
@@ -859,6 +963,34 @@ Please execute the Recommended Realignment Path or authorize a purge.
     onCancel={cancelSynthPurge}
   />
 
+  {#if $isStasisActive}
+    <!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_static_element_interactions -->
+    <div class="cyber-stasis-overlay" onclick={() => toggleStasisMode(false)} transition:fade={{ duration: 300 }}>
+      <div class="stasis-fui-backdrop"></div>
+      <div class="stasis-content" transition:fly={{ y: 20, duration: 400 }}>
+        <div class="stasis-reticle-ring">
+          <svg width="84" height="84" viewBox="0 0 24 24" fill="none" stroke="var(--primary-accent)" stroke-width="1.5">
+            <circle cx="12" cy="12" r="9" stroke-dasharray="3 3" />
+            <path d="M12 2V6M12 18V22M2 12H6M18 12H22" stroke="var(--secondary-accent)" stroke-width="2"/>
+            <circle cx="12" cy="12" r="3" fill="var(--primary-accent)" />
+          </svg>
+        </div>
+
+        <h1 class="stasis-title font-outfit">CYBER-STASIS ACTIVATED</h1>
+        
+        <div class="stasis-telemetry-row font-mono">
+          <span class="stasis-badge"><span class="badge-dot"></span> CPU: 0.0% IDLE</span>
+          <span class="stasis-badge"><span class="badge-dot"></span> GPU: RASTER PAUSED</span>
+          <span class="stasis-badge"><span class="badge-dot"></span> POWER: SAVER MODE</span>
+        </div>
+
+        <p class="stasis-prompt font-outfit">
+          PRESS <span class="key-cap">CTRL</span> + <span class="key-cap">ALT</span> + <span class="key-cap">S</span> OR CLICK ANYWHERE TO WAKE TERMINAL
+        </p>
+      </div>
+    </div>
+  {/if}
+
   {#if isInfinityRunning}
     <!-- Infinity expansion effect centered at click coordinates -->
     <div 
@@ -949,6 +1081,122 @@ Please execute the Recommended Realignment Path or authorize a purge.
 {/if}
 
 <style>
+  :global(.battery-stealth-mode) .ambient-orb {
+    filter: blur(40px) !important;
+    animation: none !important;
+    opacity: 0.15 !important;
+  }
+
+  :global(.is-scrolling .row-glass),
+  :global(.is-scrolling .task-row),
+  :global(.is-scrolling .setting-group-card) {
+    backdrop-filter: blur(4px) !important;
+    -webkit-backdrop-filter: blur(4px) !important;
+  }
+
+  :global(.stasis-suspended) *,
+  :global(.stasis-suspended) *::before,
+  :global(.stasis-suspended) *::after {
+    animation-play-state: paused !important;
+  }
+
+  .cyber-stasis-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: 99999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(2, 2, 5, 0.94);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    cursor: pointer;
+  }
+
+  .stasis-fui-backdrop {
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at center, rgba(139, 92, 246, 0.08) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  .stasis-content {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 16px;
+    padding: 40px;
+    border-radius: 24px;
+    background: rgba(13, 15, 30, 0.8);
+    border: 1px solid rgba(139, 92, 246, 0.3);
+    box-shadow: 0 0 50px rgba(139, 92, 246, 0.2), inset 0 0 20px rgba(255, 255, 255, 0.05);
+  }
+
+  .stasis-reticle-ring {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    filter: drop-shadow(0 0 15px rgba(139, 92, 246, 0.6));
+  }
+
+  .stasis-title {
+    font-size: 28px;
+    font-weight: 900;
+    letter-spacing: 4px;
+    color: #fff;
+    margin: 0;
+    background: linear-gradient(90deg, #fff, #8b5cf6, #06b6d4, #fff);
+    background-size: 200% auto;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .stasis-telemetry-row {
+    display: flex;
+    gap: 12px;
+  }
+
+  .stasis-badge {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    padding: 4px 12px;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: rgba(255, 255, 255, 0.8);
+  }
+
+  .badge-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #10b981;
+    box-shadow: 0 0 6px #10b981;
+  }
+
+  .stasis-prompt {
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.5);
+    letter-spacing: 2px;
+    margin-top: 8px;
+  }
+
+  .key-cap {
+    padding: 2px 6px;
+    border-radius: 4px;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: #fff;
+    font-weight: bold;
+  }
+
   .cyber-environment {
     position: absolute;
     top: 0; left: 0; right: 0; bottom: 0;

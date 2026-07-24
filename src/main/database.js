@@ -200,7 +200,58 @@ export function updateMissionStatus(id, status) {
   return new Promise((resolve, reject) => {
     if (!db) { reject(new Error('Database not initialized')); return; }
     
-    const isResolution = status === 'VICTORY' || status === 'ABORTED';
+    if (status === 'ABORTED') {
+      db.get("SELECT status, temporal_boundary, is_rescheduled, reschedule_count, classifications FROM missions WHERE id = ?", [id], (err, row) => {
+        if (err || !row) {
+          db.run(`UPDATE missions SET status = 'ABORTED', completed_at = ? WHERE id = ?`, [new Date().toISOString(), id], (e) => {
+            if (e) reject(e);
+            else resolve({ success: true });
+          });
+          return;
+        }
+
+        const resCount = row.reschedule_count !== undefined && row.reschedule_count !== null 
+          ? Number(row.reschedule_count) 
+          : (row.is_rescheduled ? 1 : 0);
+
+        let isBreached = row.status === 'BREACH';
+        if (!isBreached && row.temporal_boundary && row.temporal_boundary !== 'NO DEADLINE') {
+          const dlDate = new Date(row.temporal_boundary);
+          if (!isNaN(dlDate.getTime())) {
+            const dlMidnight = new Date(dlDate.getFullYear(), dlDate.getMonth(), dlDate.getDate(), 0, 0, 0, 0).getTime();
+            const today = new Date();
+            const todayMidnight = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 0, 0, 0, 0).getTime();
+            isBreached = todayMidnight > dlMidnight;
+          }
+        }
+
+        const isNeglected = isBreached && resCount >= 2;
+        let newClassifications = row.classifications || '';
+        if (isNeglected && !newClassifications.includes('NEGLECTED')) {
+          newClassifications = newClassifications ? `NEGLECTED,${newClassifications}` : 'NEGLECTED';
+        }
+
+        const nowISO = new Date().toISOString();
+        db.run(
+          `UPDATE missions SET status = 'ABORTED', completed_at = ?, classifications = ? WHERE id = ?`,
+          [nowISO, newClassifications, id],
+          (err2) => {
+            if (err2) reject(err2);
+            else {
+              const auditDesc = isNeglected 
+                ? `Tactical sector state transitioned to status: ABORTED (MARKED AS NEGLECTED AFTER 3RD BREACH)`
+                : `Tactical sector state transitioned to status: ABORTED`;
+              appendAuditLog(id, 'STATUS_UPDATE', auditDesc)
+                .then(() => resolve({ success: true }))
+                .catch(() => resolve({ success: true }));
+            }
+          }
+        );
+      });
+      return;
+    }
+
+    const isResolution = status === 'VICTORY';
     const query = isResolution 
       ? `UPDATE missions SET status = ?, completed_at = ? WHERE id = ?`
       : `UPDATE missions SET status = ? WHERE id = ?`;

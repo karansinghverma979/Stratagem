@@ -141,6 +141,9 @@ export function rebuildStoresFromCache(silent = false) {
       ? Number(m.reschedule_count) 
       : (m.is_rescheduled ? 1 : 0);
 
+    const isNeglected = (derivedStatus === 'ABORTED' || m.status === 'ABORTED') && 
+      (dbClassifications.includes('NEGLECTED') || (m.classifications && m.classifications.includes('NEGLECTED')));
+
     const formattedMission = {
       id: m.id,
       title: m.title,
@@ -155,6 +158,7 @@ export function rebuildStoresFromCache(silent = false) {
       rescheduleCount: resCount,
       isRescheduled: resCount > 0,
       isRescheduleLocked: resCount >= 2,
+      isNeglected: isNeglected,
       resolution: (derivedStatus || '').toUpperCase() === 'VICTORY' ? 'VICTORY' : (((derivedStatus || '').toUpperCase() === 'ABORTED' || (derivedStatus || '').toUpperCase() === 'ABORT') ? 'ABORTED' : null),
       completionDate: m.completed_at 
         ? m.completed_at.split('T')[0].split(' ')[0] 

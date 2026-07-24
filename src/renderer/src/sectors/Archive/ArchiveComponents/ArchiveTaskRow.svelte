@@ -6,8 +6,10 @@
   let isHovered = $state(false);
 
   let isVictory    = $derived(task.resolution === 'VICTORY');
-  let isDriftAbort = $derived(task.classifications?.includes('DRIFT-ABORTED') || task.tags?.includes('DRIFT-ABORTED'));
-  let isAborted    = $derived(task.resolution === 'ABORTED');
+  let isNeglected  = $derived(task.isNeglected || task.classifications?.includes('NEGLECTED') || task.tags?.includes('NEGLECTED'));
+  let isDriftAbort = $derived(!isNeglected && (task.classifications?.includes('DRIFT-ABORTED') || task.tags?.includes('DRIFT-ABORTED')));
+  let isAborted    = $derived(task.resolution === 'ABORTED' && !isNeglected);
+  let resCount     = $derived(task.rescheduleCount !== undefined && task.rescheduleCount !== null ? Number(task.rescheduleCount) : (task.isRescheduled ? 1 : 0));
 
   // Derive highlighted title — allow wrapping, highlight matches
   let highlightedTitle = $derived.by(() => {
@@ -50,8 +52,9 @@
 <div
   class="archive-row"
   class:row-victory={isVictory}
-  class:row-aborted={isAborted && !isDriftAbort}
+  class:row-aborted={isAborted && !isDriftAbort && !isNeglected}
   class:row-drift={isDriftAbort}
+  class:row-neglected={isNeglected}
   class:hovered={isHovered}
   onclick={handleRowClick}
   onmouseenter={handleMouseEnter}
@@ -87,10 +90,14 @@
   <div class="center-section">
     <div class="meta-row">
       <div class="resolved-date font-mono">RESOLVED: {displayDate}</div>
-      <div class="reschedule-count-badge font-mono" title="Temporal Re-alignments (Max 2)">
-        RESCHEDULES: {task.rescheduleCount || (task.isRescheduled ? 1 : 0)}/2
-      </div>
-      {#if isDriftAbort}
+      {#if resCount > 0 && !isNeglected}
+        <div class="reschedule-count-badge font-mono" title="Temporal Re-alignments Used">
+          {resCount === 1 ? 'RESCHEDULED' : 'RESCHEDULED TWICE'}
+        </div>
+      {/if}
+      {#if isNeglected}
+        <span class="resolution-badge neglected-badge">⚡ NEGLECTED</span>
+      {:else if isDriftAbort}
         <span class="resolution-badge drift-badge">⚡ DRIFT-ABORTED</span>
       {:else if isVictory}
         <span class="resolution-badge victory-badge">✓ VICTORY</span>
@@ -356,6 +363,13 @@
     background: rgba(255,45,85,0.14);
     border: 1px solid rgba(255,45,85,0.5);
     box-shadow: 0 0 10px rgba(255,45,85,0.3);
+  }
+
+  .neglected-badge {
+    color: #ff0055;
+    background: rgba(255, 0, 85, 0.16);
+    border: 1px solid rgba(255, 0, 85, 0.6);
+    box-shadow: 0 0 12px rgba(255, 0, 85, 0.4);
     animation: driftBadgePulse 2.5s ease-in-out infinite alternate;
   }
 

@@ -1,4 +1,4 @@
-# 🛰️ STRATAGEM
+# STRATAGEM
 > **Classified Tactical Intelligence Operating System & Mission Control Matrix**
 
 ---

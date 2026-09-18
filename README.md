@@ -1,4 +1,4 @@
-# 🛰️ STRATAGEM v1.0.1
+# 🛰️ STRATAGEM
 > **Classified Tactical Intelligence Operating System & Mission Control Matrix**
 
 ---

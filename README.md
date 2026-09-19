@@ -243,7 +243,7 @@ npm run build:mac
 npm run build:linux
 ```
 
-*(For comprehensive directory blueprints, IPC ContextBridge contracts, and sector extension guides, consult **[guid.md](guid.md)** and **[info.md](info.md)**).*
+*(For comprehensive directory blueprints, IPC ContextBridge contracts, and sector extension guides, consult **[GUIDE.md](GUIDE.md)** and **[INFO.md](INFO.md)**).*
 
 ---
 

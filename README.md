@@ -64,6 +64,52 @@ irm https://github.com/karansinghverma979/Stratagem/releases/download/v3.0.0/Str
 
 ---
 
+## 🎯 Mission Purpose & The 5 Tactical Operating Rules
+
+### Why Stratagem Exists: The Antidote to Boring Web Checklists
+Most project trackers (Trello, Jira, Todoist, Notion) suffer from three fatal flaws:
+1. **Dull, Uninspiring Interfaces**: Spreadsheet-like web layouts that feel like corporate homework rather than mission command.
+2. **Cloud Vulnerability & Subscription Bloat**: Private thoughts, goals, and strategies are hosted on remote servers, subject to downtime, rate limits, and recurring fees.
+3. **Subconscious Distraction & Battery Drain**: Heavy browser DOMs, unconstrained CPU loops, and a complete absence of urgency when deadlines pass.
+
+**Stratagem is the antithesis**: A cinematic **Futuristic User Interface (FUI)** tactical command console designed to turn your screen into a high-stakes mission bridge. It bridges military-grade execution discipline with gamified cybernetic aesthetics, zero cloud dependencies, and instant local hardware responsiveness.
+
+```text
+┌────────────────────────────────────────────────────────────────────────┐
+│                    THE 5 IMMUTABLE TACTICAL RULES                      │
+├────┬─────────────────────────────┬─────────────────────────────────────┤
+│ 01 │ Sovereign Persistence       │ 100% Local SQLite3 WAL. Zero cloud, │
+│    │                             │ zero telemetry, zero accounts.       │
+├────┼─────────────────────────────┼─────────────────────────────────────┤
+│ 02 │ Deep Focus (Cyber-Stasis)   │ Press Ctrl+Alt+S or minimize to drop│
+│    │                             │ CPU & GPU load to 0.0% instantly.   │
+├────┼─────────────────────────────┼─────────────────────────────────────┤
+│ 03 │ Breach Accountability       │ Deadlines are rigid. Missed dates   │
+│    │                             │ trigger pulsing red breach alarms.  │
+├────┼─────────────────────────────┼─────────────────────────────────────┤
+│ 04 │ Weaponized Progression      │ Ideas enter as Raw Intel, synthesize│
+│    │                             │ in Kanban, and forge as Missions.   │
+├────┼─────────────────────────────┼─────────────────────────────────────┤
+│ 05 │ Zero-Latency Velocity       │ Complete workflows execute without a│
+│    │                             │ mouse via J/K, Space, and Enter.    │
+└────┴─────────────────────────────┴─────────────────────────────────────┘
+```
+
+---
+
+### 🌐 Primary Real-World Use Cases
+
+* **⚔️ High-Stakes Exam & Certification Sprints (SSC, UPSC, Engineering, Medical)**:
+  Transform sprawling syllabus modules into time-bounded missions. Track historical mock percentiles, enforce daily Pomodoro lock-ins with the circular target timer, and eliminate procrastination through high-stakes visual accountability.
+* **💻 Systems & Indie Game Engineering**:
+  An offline mission bridge running borderless on a secondary vertical or ultrawide monitor. Map architecture refactors across the 3-tier Arsenal board and monitor commits with CRT scanline aesthetics.
+* **⚡ Workshop Fabrication & Hardware Prototyping**:
+  Track electrical motor rewinding, PCB soldering, or machining runs step-by-step with audible mechanical click confirmations and clear task resolution badges (`VICTORY` vs `ABORTED`).
+* **🧠 Executive Deep Work & Distraction Shield**:
+  Combine customizable ambient audio soundscapes with floating holographic mini-timers to enter and sustain multi-hour flow states without switching browser tabs.
+
+---
+
 ## 📦 Production Release Matrix & Version Heritage
 
 All 4 major releases of Stratagem are permanently preserved with direct standalone installer downloads:
@@ -79,30 +125,81 @@ All 4 major releases of Stratagem are permanently preserved with direct standalo
 
 ## 🚀 Quickstart & Installation Guide
 
-### Pathway A: Standalone Windows Installer (Recommended)
-1. Download **[Stratagem-3.0.0-setup.exe](https://github.com/karansinghverma979/Stratagem/releases/download/v3.0.0/Stratagem-3.0.0-setup.exe)**.
-2. Run the installer wizard (custom directory selection, desktop shortcut creation).
-3. Launch `Stratagem` from the Start Menu or Desktop.
+Stratagem provides two distinct onboarding pathways depending on whether you are an operator seeking the standalone application or an engineer looking to inspect the source code.
 
-### Pathway B: PowerShell 1-Line Quick Install
+---
+
+### 🔰 Pathway 1: For Operators & Non-Technical Users (1-Click Setup)
+
+> [!IMPORTANT]
+> **Zero Technical Prerequisites**: You do **NOT** need Node.js, Python, Git, or C++ compilers installed. Everything is pre-compiled into a single self-contained Windows application.
+
+```text
+┌──────────────────────────┬─────────────────────────────────────────────────┐
+│ MINIMUM SYSTEM SPECS     │ RECOMMENDED OPERATIONAL SPECS                   │
+├──────────────────────────┼─────────────────────────────────────────────────┤
+│ OS: Windows 10 / 11 64-bit│ OS: Windows 11 (Version 22H2 or higher, x64)   │
+│ RAM: 4 GB                │ RAM: 8 GB or higher                             │
+│ Storage: 1.2 GB free space│ Display: 1080p, 1440p, or 4K Ultrawide         │
+│ GPU: Integrated Graphics │ Audio: Headphones or stereo speakers (FUI audio)│
+└──────────────────────────┴─────────────────────────────────────────────────┘
+```
+
+#### Option A: Direct GUI Installer Wizard (Recommended)
+1. Download the official production build: **[Stratagem-3.0.0-setup.exe](https://github.com/karansinghverma979/Stratagem/releases/download/v3.0.0/Stratagem-3.0.0-setup.exe)** *(783 MB, SHA-256 verified)*.
+2. Double-click the `.exe` file to launch the **NSIS Tactical Setup Wizard**.
+3. Choose your destination directory (default: `%LOCALAPPDATA%\Programs\Stratagem`) and select whether to create a Desktop shortcut.
+4. Click **Install**. The setup wizard automatically registers file associations and configures local SQLite storage.
+5. Click **Finish** to cold-boot into the Stratagem Mission Control Matrix!
+
+#### Option B: 1-Line PowerShell Auto-Installer
+Open Windows PowerShell and paste this single command to download and launch the installer automatically:
 ```powershell
 irm https://github.com/karansinghverma979/Stratagem/releases/download/v3.0.0/Stratagem-3.0.0-setup.exe -OutFile Stratagem-Setup.exe; .\Stratagem-Setup.exe
 ```
 
-### Pathway C: Local Developer Compilation
+---
+
+### 🛠️ Pathway 2: For Engineers & Developers (Source Build & Extension)
+
+Follow this pathway to audit the source code, customize the Svelte 5 sectors, or compile custom binaries.
+
+#### 1. System Requirements & Toolchain
+* **Node.js**: `v18.x` or `v20.x` LTS
+* **Package Manager**: `npm v9+` or `pnpm`
+* **Native C++ Compiler** (Required for native `sqlite3` addon compilation):
+  * **Windows**: Visual Studio Community (with *"Desktop Development with C++"* workload) OR run `npm install --global windows-build-tools` from an elevated PowerShell.
+  * **Linux**: `sudo apt install build-essential python3`
+  * **macOS**: `xcode-select --install`
+
+#### 2. Local Environment Bootstrapping
 ```bash
-# 1. Clone the repository
+# 1. Clone the repository from GitHub
 git clone https://github.com/karansinghverma979/Stratagem.git
 cd Stratagem
 
-# 2. Install dependencies & rebuild native SQLite3 drivers
+# 2. Install dependencies & rebuild native SQLite3 drivers for Electron
 npm install
 npm run postinstall
 
-# 3. Launch with hot-reloading dev server
+# 3. Launch with Vite hot-reloading dev server & Electron shell
 npm run dev
 ```
-*(For complete multi-platform compilation details for Mac and Linux, review **[guid.md](guid.md)**).*
+
+#### 3. Production Packaging Targets
+```bash
+# Compile standalone Windows setup installer (Output: dist/Stratagem-3.0.0-setup.exe)
+npm run build:win
+
+# Compile unpacked portable folder (Output: dist/win-unpacked/)
+npm run build:unpack
+
+# Compile macOS or Linux distribution packages
+npm run build:mac
+npm run build:linux
+```
+
+*(For comprehensive directory blueprints, IPC ContextBridge contracts, and sector extension guides, consult **[guid.md](guid.md)** and **[info.md](info.md)**).*
 
 ---
 

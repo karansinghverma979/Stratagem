@@ -23,7 +23,7 @@
 ---
 
 <p align="center">
-  <img width="380" height="380" alt="Stratagem Holographic Crest" src="https://github.com/user-attachments/assets/2748268e-f1d1-4948-b178-deb3f53f5c4d" />
+  <img width="380" height="380" alt="Stratagem Holographic Crest" src="assets/screenshots/stratagem-crest.png" />
 </p>
 
 <div align="center">
@@ -109,6 +109,50 @@ Most project trackers (Trello, Jira, Todoist, Notion) suffer from three fatal fl
   Combine customizable ambient audio soundscapes with floating holographic mini-timers to enter and sustain multi-hour flow states without switching browser tabs.
 
 ---
+
+### 🗣️ Demystifying the Military Lexicon: Plain English Translation
+
+While Stratagem utilizes high-immersion military intelligence terminology, its operational engine translates directly into standard productivity concepts:
+
+| Cinematic FUI Term | Plain English Equivalent | Everyday Productivity Utility |
+| :--- | :--- | :--- |
+| **Missions** | High-Priority Projects & Tasks | Actionable deliverables with measurable outcomes and subtasks. |
+| **Threat Ratings** | Priority Hierarchy (Low / Med / High) | Immediate visual color triage to focus on urgent blockers first. |
+| **Temporal Boundary** | Hard Due Date & Deadline | Strict completion boundaries enforced by countdown algorithms. |
+| **Arsenal Sector** | 3-Tier Kanban Board | Structured pipeline: `Raw Intel` ──► `Synthesizing` ──► `Weaponized`. |
+| **Breach Sector** | Overdue Quarantine Dashboard | Automatic red-alert quarantine forcing immediate resolution of overdue tasks. |
+| **Chronos Sector** | Pomodoro Focus Engine | Distraction-free countdown ring with audio target-lock notifications. |
+| **Critical Purge** | Factory Reset / Clean State | One-click failsafe database purge to reset your workstation environment. |
+| **Genesis Sector** | System Settings & Configurations | UI blur governors, audio synthesizer controls, and data backup portals. |
+
+---
+
+## ⚡ The Architectural Evolution: Passing the Torch to Campaigns
+
+> **"Stratagem proved that desktop software can be a visual masterpiece. Campaigns proved how fast it can fly."**
+
+Stratagem is an engineering monument—it pushed the boundaries of what is possible with Svelte 5, Electron, Web Audio API, and volumetric glassmorphism. However, extreme visual richness introduces physical hardware constraints:
+* **The Resource Equation**: Rendering 24 simultaneous holographic viewports, backdrop blurs, audio oscillators, and custom shaders requires significant GPU VRAM and 300 MB–800 MB RAM.
+* **The Transition Decision**: While optimizations like the **Cyber-Stasis Protocol** successfully eliminated idle draw, active daily execution demanded an ultra-lean, whisper-quiet system footprint.
+
+```text
+┌───────────────────────────────────────────┬───────────────────────────────────────────┐
+│ ♟️ STRATAGEM (The Visual Monument)        │ ⚡ CAMPAIGNS (The Lightweight Daily Driver) │
+├───────────────────────────────────────────┼───────────────────────────────────────────┤
+│ • Peak Cinematic FUI Frontend Artistry    │ • Zero-Latency High-Velocity Execution    │
+│ • 24 Volumetric Glassmorphic Sectors      │ • Lean, Focused Minimalist Viewports      │
+│ • Rich Web Audio Acoustic Oscillators     │ • Whisper-Quiet System Footprint          │
+│ • Standalone SQLite3 Kiosk Shell          │ • Native Bidirectional Obsidian Markdown  │
+│ • Resource Profile: Heavy GPU/VRAM & RAM  │ • Resource Profile: Ultra-Low Idle RAM/CPU│
+│ • Status: Feature-Complete Flagship Build │ • Status: Active Primary Daily Driver     │
+└───────────────────────────────────────────┴───────────────────────────────────────────┘
+```
+
+Therefore, active development has shifted to **[Campaigns](https://github.com/karansinghverma979/Campaigns)**—a streamlined, zero-latency tactical task manager built for low system resources, minimal memory footprints, and bidirectional synchronization with local **Obsidian Markdown Vaults**.
+
+* **Want the cinematic FUI showpiece?** Run **[Stratagem](https://github.com/karansinghverma979/Stratagem)** below.
+* **Want the ultra-lightweight daily driver?** Discover **[Campaigns](https://github.com/karansinghverma979/Campaigns)**.
+* *(Read the full engineering retrospective in **[EVOLUTION.md](EVOLUTION.md)**).*
 
 ## 📦 Production Release Matrix & Version Heritage
 
@@ -224,7 +268,7 @@ Quick-jump directly to the visual documentation and telemetry specs for any oper
 ### 0. SYSTEM BOOT SEQUENCE (Cold Boot Loading Screen)
 
 <p align="center">
-  <img width="100%" alt="System Boot Sequence" src="https://github.com/user-attachments/assets/bb7b9956-8fe0-487e-97b4-4ed835d09d9f" />
+  <img width="100%" alt="System Boot Sequence" src="assets/screenshots/00-boot-sequence.png" />
 </p>
 
 * **UI & Aesthetics**: A dark, full-screen holographic terminal overlay. Employs a scrolling diagnostics log printing hexadecimal address blocks, loading status indicators, and system checks. Features an oversized header reading `SYSTEM BOOT SEQUENCE` with a shimmering neon gradient pulse and high-contrast typography.
@@ -235,7 +279,7 @@ Quick-jump directly to the visual documentation and telemetry specs for any oper
 ### 1. CRITICAL PURGE CONSOLE (Nuke Storage Protocol)
 
 <p align="center">
-  <img width="100%" alt="Critical Purge Console" src="https://github.com/user-attachments/assets/74945c67-9b65-4fd8-944a-caa844c2497d" />
+  <img width="100%" alt="Critical Purge Console" src="assets/screenshots/01-critical-purge-nuke.png" />
 </p>
 
 * **UI & Aesthetics**: High-intensity Tactical Red glassmorphic full-screen overlay. Includes a neon-glowing 60-second circular progress countdown SVG, a diagonal scrolling caution safeguard tape animation, and a real-time data table showing active system snapshots. The container is subject to a kinetic vibration effect (`dumpShake` keyframe loop) when active.
@@ -246,7 +290,7 @@ Quick-jump directly to the visual documentation and telemetry specs for any oper
 ### 2. DATABASE INTEGRITY STATION (System Backup Matrix)
 
 <p align="center">
-  <img width="100%" alt="Database Integrity Station" src="https://github.com/user-attachments/assets/bb199aa2-32aa-4d54-965f-40fd4bc6b09c" />
+  <img width="100%" alt="Database Integrity Station" src="assets/screenshots/02-database-integrity.png" />
 </p>
 
 * **UI & Aesthetics**: Located inside the Intelligence Hub modal, styled with glowing emerald and cyan borders. Features database path readouts with a pen-and-paper SVG cursor hover effect, and diagnostic progress bars.
@@ -257,15 +301,15 @@ Quick-jump directly to the visual documentation and telemetry specs for any oper
 ### 3. NEURAL LINK STATION (Diagnostics Feed Console)
 
 <p align="center">
-  <img width="100%" alt="Neural Link Station 1" src="https://github.com/user-attachments/assets/7182c6f0-bf4c-4edb-9aae-791f855c4c9a" />
+  <img width="100%" alt="Neural Link Station 1" src="assets/screenshots/03-neural-link-station-1.png" />
 </p>
 <br>
 <p align="center">
-  <img width="100%" alt="Neural Link Station 2" src="https://github.com/user-attachments/assets/ac28d791-d24a-4b80-a372-208844383b14" />
+  <img width="100%" alt="Neural Link Station 2" src="assets/screenshots/03-neural-link-station-2.png" />
 </p>
 <br>
 <p align="center">
-  <img width="100%" alt="Neural Link Station 3" src="https://github.com/user-attachments/assets/fea94212-d9a2-45d8-8d9e-32009225b70a" />
+  <img width="100%" alt="Neural Link Station 3" src="assets/screenshots/03-neural-link-station-3.png" />
 </p>
 
 * **UI & Aesthetics**: A vertically layout terminal console streaming simulated cybernetic synchronization telemetry logs. Uses mono-spaced font weights, dotted data matrices, and active checking marks.
@@ -276,7 +320,7 @@ Quick-jump directly to the visual documentation and telemetry specs for any oper
 ### 4. FORGE STATION (Task Forge Modal)
 
 <p align="center">
-  <img width="100%" alt="Forge Station" src="https://github.com/user-attachments/assets/e2a46996-f036-420d-bdd2-2859a7bd178d" />
+  <img width="100%" alt="Forge Station" src="assets/screenshots/04-forge-station-task-modal.png" />
 </p>
 
 * **UI & Aesthetics**: A prominent modal overlay (spanning 75vw) featuring a 3D glassmorphic panel, high-contrast inputs, and a target validation telemetry card on the top right. Displays the primary **Omni-Scope v6.0** targeting reticle.
@@ -287,7 +331,7 @@ Quick-jump directly to the visual documentation and telemetry specs for any oper
 ### 5. TEMPORAL NEXUS (Forge Calendar Engine)
 
 <p align="center">
-  <img width="100%" alt="Temporal Nexus" src="https://github.com/user-attachments/assets/55100b73-8dff-4313-937b-a6ba28c043b0" />
+  <img width="100%" alt="Temporal Nexus" src="assets/screenshots/05-temporal-nexus-calendar.png" />
 </p>
 
 * **UI & Aesthetics**: A 500px circular grid layout representing dates, styled with thin glowing lines, month/year selector dropdown menus, and neon indicators.
@@ -298,11 +342,11 @@ Quick-jump directly to the visual documentation and telemetry specs for any oper
 ### 6. MISSION PROTOCOL MODAL (Execution Task View)
 
 <p align="center">
-  <img width="100%" alt="Mission Protocol 1" src="https://github.com/user-attachments/assets/b14451f0-63cf-4663-a580-8137230cde7b" />
+  <img width="100%" alt="Mission Protocol 1" src="assets/screenshots/06-mission-protocol-view-1.png" />
 </p>
 <br>
 <p align="center">
-  <img width="100%" alt="Mission Protocol 2" src="https://github.com/user-attachments/assets/f20080e3-5e56-4e67-96ba-536dd8bd0e6b" />
+  <img width="100%" alt="Mission Protocol 2" src="assets/screenshots/06-mission-protocol-view-2.png" />
 </p>
 
 * **UI & Aesthetics**: Oversized overlay (85vw width by 80vh height) featuring a 48px padding layout, deep backdrop blurs, and high-visibility typography (Outfit headers scaled to 2.5rem).
@@ -313,11 +357,11 @@ Quick-jump directly to the visual documentation and telemetry specs for any oper
 ### 7. VICTORY / ABORT BADGES (Mission Resolutions)
 
 <p align="center">
-  <img width="100%" alt="Victory Badge" src="https://github.com/user-attachments/assets/df6a3e9c-1c72-41d6-a1d8-4b71c4200593" />
+  <img width="100%" alt="Victory Badge" src="assets/screenshots/07-victory-badge-resolution.png" />
 </p>
 <br>
 <p align="center">
-  <img width="100%" alt="Abort Badge" src="https://github.com/user-attachments/assets/bb51899d-a770-49ff-9d03-8a7fb623ac2e" />
+  <img width="100%" alt="Abort Badge" src="assets/screenshots/07-abort-badge-resolution.png" />
 </p>
 
 * **UI & Aesthetics**: Saturated neon badges embedded on historical rows. Completed missions display a glowing emerald badge marked `VICTORY`, while terminated ones display a crimson `ABORTED` badge.
@@ -328,7 +372,7 @@ Quick-jump directly to the visual documentation and telemetry specs for any oper
 ### 8. ARSENAL SECTOR (Strategic Kanban Board)
 
 <p align="center">
-  <img width="100%" alt="Arsenal Sector" src="https://github.com/user-attachments/assets/14b0193e-1246-477d-986e-cedbe4c5d337" />
+  <img width="100%" alt="Arsenal Sector" src="assets/screenshots/08-arsenal-kanban-board.png" />
 </p>
 
 * **UI & Aesthetics**: Three-column tactical grid layout using Outfit headers and glowing volumetric borders. Column backdrops feature glassmorphic blurs.
@@ -339,7 +383,7 @@ Quick-jump directly to the visual documentation and telemetry specs for any oper
 ### 9. RAW INTEL & SYNTHESIZING (Kanban Columns)
 
 <p align="center">
-  <img width="100%" alt="Kanban Columns" src="https://github.com/user-attachments/assets/302b9f86-e7eb-400f-8841-aa7160048edb" />
+  <img width="100%" alt="Kanban Columns" src="assets/screenshots/09-raw-intel-synthesizing.png" />
 </p>
 
 * **UI & Aesthetics**: Raw Intel column uses cyan border accents (Utility), representing unprocessed inputs. Synthesizing uses neon-violet highlights (Sync), representing tasks undergoing detail compilation.
@@ -350,7 +394,7 @@ Quick-jump directly to the visual documentation and telemetry specs for any oper
 ### 10. CALIBRATION STATION (Telemetry Filters & Sorting)
 
 <p align="center">
-  <img width="100%" alt="Calibration Station" src="https://github.com/user-attachments/assets/4f5252b7-75a7-4194-bc06-d01e56451206" />
+  <img width="100%" alt="Calibration Station" src="assets/screenshots/10-calibration-filters-sorting.png" />
 </p>
 
 * **UI & Aesthetics**: Expansive, 100% wide horizontal filter bar positioned directly below the top navigation. Designed with glassmorphic blurs, solid checkmark icons, and threat selection tabs.
@@ -361,7 +405,7 @@ Quick-jump directly to the visual documentation and telemetry specs for any oper
 ### 11. BREACH SECTOR (Alarm Dashboard)
 
 <p align="center">
-  <img width="100%" alt="Breach Sector" src="https://github.com/user-attachments/assets/b88344f8-ebf1-4ee4-99fe-47f76d4b6ad3" />
+  <img width="100%" alt="Breach Sector" src="assets/screenshots/11-breach-sector-alarm.png" />
 </p>
 
 * **UI & Aesthetics**: Wrapped inside a pulsing **Tactical Red** vignette glow, showcasing stuttering color-split glitch text headers, representing system alarms.
@@ -372,7 +416,7 @@ Quick-jump directly to the visual documentation and telemetry specs for any oper
 ### 12. BREACH TASK VIEW (Compromise Details Modal)
 
 <p align="center">
-  <img width="100%" alt="Breach Task View" src="https://github.com/user-attachments/assets/80eb3222-b3d8-4419-bf8b-5dae27f088b2" />
+  <img width="100%" alt="Breach Task View" src="assets/screenshots/12-breach-task-compromise-view.png" />
 </p>
 
 * **UI & Aesthetics**: Centered overlay modal styled with red alarm borders and scrolling diagnostic metadata telemetry logs.
@@ -383,7 +427,7 @@ Quick-jump directly to the visual documentation and telemetry specs for any oper
 ### 13. REALIGNMENT STATION (Mitigation Dials)
 
 <p align="center">
-  <img width="100%" alt="Realignment Station" src="https://github.com/user-attachments/assets/fc4c8c94-698b-43b7-8a5b-d4aa68232812" />
+  <img width="100%" alt="Realignment Station" src="assets/screenshots/13-realignment-mitigation-dials.png" />
 </p>
 
 * **UI & Aesthetics**: Inline interactive buttons with glowing hover states.
@@ -394,7 +438,7 @@ Quick-jump directly to the visual documentation and telemetry specs for any oper
 ### 14. CHRONOS SECTOR (Focus Sync Station)
 
 <p align="center">
-  <img width="100%" alt="Chronos Sector" src="https://github.com/user-attachments/assets/bbbe6938-057a-44e5-a31b-d8a02ca351a2" />
+  <img width="100%" alt="Chronos Sector" src="assets/screenshots/14-chronos-sector-focus-station.png" />
 </p>
 
 * **UI & Aesthetics**: Volumetric console featuring a central countdown timer, circular progress SVG rings, and side-aligned command panels.
@@ -405,7 +449,7 @@ Quick-jump directly to the visual documentation and telemetry specs for any oper
 ### 15. CHRONOS FOCUS TIMER (Target Lock Progress Ring)
 
 <p align="center">
-  <img width="100%" alt="Chronos Focus Timer" src="https://github.com/user-attachments/assets/c75276e5-69fe-4b9f-a3e2-89d85314c750" />
+  <img width="100%" alt="Chronos Focus Timer" src="assets/screenshots/15-chronos-focus-target-lock-ring.png" />
 </p>
 
 * **UI & Aesthetics**: SVG neon-purple circular progress ring. When active, it displays target lock animations.
@@ -416,7 +460,7 @@ Quick-jump directly to the visual documentation and telemetry specs for any oper
 ### 16. CHRONOS TODO (Auxiliary Task Checklists)
 
 <p align="center">
-  <img width="100%" alt="Chronos Todo" src="https://github.com/user-attachments/assets/2764be53-ca7c-4a46-a1be-ea014d37ddef" />
+  <img width="100%" alt="Chronos Todo" src="assets/screenshots/16-chronos-todo-checklists.png" />
 </p>
 
 * **UI & Aesthetics**: A scrolling sidebar list with hollow checkbox indicators, green completion strikes, and thin borders.
@@ -427,11 +471,11 @@ Quick-jump directly to the visual documentation and telemetry specs for any oper
 ### 17. CHRONOS REMINDERS (Operational Alarms)
 
 <p align="center">
-  <img width="100%" alt="Chronos Reminders" src="https://github.com/user-attachments/assets/6ccc525e-994c-4117-9ae9-17237ff61052" />
+  <img width="100%" alt="Chronos Reminders" src="assets/screenshots/17-chronos-reminders-alarms.png" />
 </p>
 <br>
 <p align="center">
-  <img width="100%" alt="Chronos Notification Example" src="https://github.com/user-attachments/assets/d43e9e4b-0fef-42fa-8201-1f9f58bd41af" />
+  <img width="100%" alt="Chronos Notification Example" src="assets/screenshots/17-chronos-notification-popup.png" />
 </p>
 
 * **UI & Aesthetics**: Grid cells showing time readouts, notification badges, and delete triggers.
@@ -442,7 +486,7 @@ Quick-jump directly to the visual documentation and telemetry specs for any oper
 ### 18. CHRONOS STOPWATCH (Diagnostic Dial)
 
 <p align="center">
-  <img width="100%" alt="Chronos Stopwatch" src="https://github.com/user-attachments/assets/51823175-5cf6-446d-a890-34be28d24353" />
+  <img width="100%" alt="Chronos Stopwatch" src="assets/screenshots/18-chronos-stopwatch-dial.png" />
 </p>
 
 * **UI & Aesthetics**: A secondary digital layout console displaying milliseconds readouts.
@@ -453,7 +497,7 @@ Quick-jump directly to the visual documentation and telemetry specs for any oper
 ### 19. GENESIS SECTOR (Central Configuration Panel)
 
 <p align="center">
-  <img width="100%" alt="Genesis Sector" src="https://github.com/user-attachments/assets/83bf5608-2a59-46bc-9863-d72c05d283d6" />
+  <img width="100%" alt="Genesis Sector" src="assets/screenshots/19-genesis-central-config-panel.png" />
 </p>
 
 * **UI & Aesthetics**: Modular glassmorphic settings panel with neon violet accent sliders, toggle checkboxes, and diagnostic telemetries.
@@ -464,7 +508,7 @@ Quick-jump directly to the visual documentation and telemetry specs for any oper
 ### 20. DEVELOPER PORTRAITS PANEL (devImages Configuration)
 
 <p align="center">
-  <img width="100%" alt="Developer Portraits" src="https://github.com/user-attachments/assets/ec5218eb-bfb4-48f8-a316-6db72ab01e85" />
+  <img width="100%" alt="Developer Portraits" src="assets/screenshots/20-developer-portraits-devimages.png" />
 </p>
 
 * **UI & Aesthetics**: Slide-out panel loading developer portrait grids, custom images, and telemetry data tables.
@@ -475,7 +519,7 @@ Quick-jump directly to the visual documentation and telemetry specs for any oper
 ### 21. MENTAL SKILLS (Cognitive Improvement Nodes)
 
 <p align="center">
-  <img width="100%" alt="Mental Skills" src="https://github.com/user-attachments/assets/6c20c01b-1dd9-41a4-a135-8864a719964b" />
+  <img width="100%" alt="Mental Skills" src="assets/screenshots/21-mental-skills-cognitive-tree.png" />
 </p>
 
 * **UI & Aesthetics**: Interactive node network grid (skill tree) displaying connected cognitive and operational nodes.
@@ -486,7 +530,7 @@ Quick-jump directly to the visual documentation and telemetry specs for any oper
 ### 22. NOTECARDS (Cognitive Flashcard Portal)
 
 <p align="center">
-  <img width="100%" alt="NoteCards" src="https://github.com/user-attachments/assets/ee95041b-576d-4c8e-b0b1-ebcbdf6276c2" />
+  <img width="100%" alt="NoteCards" src="assets/screenshots/22-notecards-flashcard-portal.png" />
 </p>
 
 * **UI & Aesthetics**: High-contrast card slides featuring text matrices, study logs, and next/previous button readouts.
@@ -497,7 +541,7 @@ Quick-jump directly to the visual documentation and telemetry specs for any oper
 ### 23. ENVIRONMENT SETTINGS (System Toggles)
 
 <p align="center">
-  <img width="100%" alt="Environment Settings" src="https://github.com/user-attachments/assets/38d3994b-9ad2-4690-aaa4-382a713d9dd4" />
+  <img width="100%" alt="Environment Settings" src="assets/screenshots/23-environment-system-toggles.png" />
 </p>
 
 * **UI & Aesthetics**: Row lists with active green/red toggles and volumetric slides.
@@ -508,11 +552,11 @@ Quick-jump directly to the visual documentation and telemetry specs for any oper
 ### 24. INTEGRATED IMPROVEMENT MATRIX (Neural Uplink Logs)
 
 <p align="center">
-  <img width="100%" alt="Improvement Matrix 1" src="https://github.com/user-attachments/assets/b77124bd-1644-4d45-9d0a-e2d359e0e4e8" />
+  <img width="100%" alt="Improvement Matrix 1" src="assets/screenshots/24-improvement-matrix-log-1.png" />
 </p>
 <br>
 <p align="center">
-  <img width="100%" alt="Improvement Matrix 2" src="https://github.com/user-attachments/assets/bdedc8a4-11e5-494f-afc8-9e376de3a2ac" />
+  <img width="100%" alt="Improvement Matrix 2" src="assets/screenshots/24-improvement-matrix-log-2.png" />
 </p>
 
 * **UI & Aesthetics**: Scrolling diagnostic log tracking recent configuration improvements and task calibrations.
@@ -558,15 +602,19 @@ Stratagem is engineered to function 100% offline with zero cloud telemetry or th
 
 ## 📚 Deep Documentation & Developer Artifacts
 
-For operators, architects, and developers seeking internal blueprints:
+For operators, visual architects, and developers seeking internal blueprints:
 
-- **[Architecture Deep-Dive](docs/architecture.md)**: Deterministic state-machine principles, decoupled governance, and multi-source sync.
-- **[Comprehensive Project Changelog](docs/changelog.md)**: Full chronological evolution from v1.0.1 through v3.0.0.
-- **[Operator Onboarding & Build Protocol (guid.md)](guid.md)**: Cloning walkthrough, C++ native rebuilds, and multi-platform compilation.
-- **[Database Schemas & Preload APIs (info.md)](info.md)**: Full SQLite schema definitions, IPC ContextBridge contracts, and store maps.
-- **[Security Policy & Disclosure](SECURITY.md)**: Coordinated vulnerability disclosure and supported versions matrix.
-- **[Troubleshooting Runbook](docs/troubleshooting.md)**: Database corruption recovery, WAL checkpoints, and audio clipping fixes.
-- **[Engineering Credits](docs/credits.md)**: Full maintainer and contributor attribution.
+- **[Architectural Evolution & Handoff to Campaigns (EVOLUTION.md)](EVOLUTION.md)**: Deep retrospective on cinematic UI, system resource realities, and the birth of Campaigns.
+- **[Release 3.0.0 Flagship Notes (Release-3.md)](Release-3.md)**: Cyber-Stasis Protocol, 0% CPU/GPU sleep, and keyboard velocity.
+- **[Release 2.0.0 & 2.3.0 Notes (Release-2.md)](Release-2.md)**: Svelte DOM unmounting (-60% RAM), WAL concurrency, and milestone click ratio.
+- **[Release 1.0.1 Notes (Release-1.md)](Release-1.md)**: Initial production launch, 24-sector FUI layout, and NSIS installer.
+- **[Operator Onboarding & Build Protocol (GUIDE.md)](GUIDE.md)**: Cloning walkthrough, C++ native rebuilds, and multi-platform compilation.
+- **[Database Schemas & Preload APIs (INFO.md)](INFO.md)**: Full SQLite schema definitions, IPC ContextBridge contracts, and store maps.
+- **[System Architecture Deep-Dive (docs/architecture.md)](docs/architecture.md)**: Deterministic state-machine principles and multi-source sync.
+- **[Comprehensive Project Changelog (docs/changelog.md)](docs/changelog.md)**: Full chronological evolution from v1.0.1 through v3.0.0.
+- **[Security Policy & Disclosure (SECURITY.md)](SECURITY.md)**: Coordinated vulnerability disclosure and supported versions matrix.
+- **[Troubleshooting Runbook (docs/troubleshooting.md)](docs/troubleshooting.md)**: Database corruption recovery, WAL checkpoints, and audio clipping fixes.
+- **[Engineering Credits (docs/credits.md)](docs/credits.md)**: Full maintainer and contributor attribution.
 
 ---
 

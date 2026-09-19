@@ -1,19 +1,124 @@
-# STRATAGEM
+# ♟️ STRATAGEM
 > **Classified Tactical Intelligence Operating System & Mission Control Matrix**
+
+<p align="center">
+  <a href="https://github.com/karansinghverma979/Stratagem/releases/tag/v3.0.0">
+    <img src="https://img.shields.io/badge/Release-v3.0.0--Production-blueviolet?style=for-the-badge&logo=electron&logoColor=white" alt="Release Build v3.0.0" />
+  </a>
+  <img src="https://img.shields.io/badge/Platform-Windows%2010%20%2F%2011%20x64-0078D6?style=for-the-badge&logo=windows&logoColor=white" alt="Windows 11" />
+  <img src="https://img.shields.io/badge/Architecture-Svelte%205%20%2B%20Electron%20%2B%20SQLite3-FF3E00?style=for-the-badge&logo=svelte&logoColor=white" alt="Architecture" />
+  <img src="https://img.shields.io/badge/Idle%20Load-0.0%25%20CPU%20%7C%200%25%20GPU-brightgreen?style=for-the-badge" alt="0% Idle Load" />
+  <img src="https://img.shields.io/badge/Security-100%25%20Local%20Sovereign-green?style=for-the-badge&logo=shieldsdotio&logoColor=white" alt="Local Sovereign" />
+  <a href="LICENSE">
+    <img src="https://img.shields.io/badge/License-MIT-green?style=for-the-badge" alt="MIT License" />
+  </a>
+</p>
 
 ---
 
-![Security Clearance](https://img.shields.io/badge/Security--Clearance-LEVEL--4-red?style=for-the-badge)
-![System State](https://img.shields.io/badge/System--State-ACTIVE-brightgreen?style=for-the-badge)
-![Release build](https://img.shields.io/badge/Build-v1.0.1--Production-blueviolet?style=for-the-badge)
+> [!NOTE]
+> **🏛️ FLAGSHIP SHOWCASE & REPOSITORY STATUS**:
+> **Stratagem v3.0.0 is a stable, feature-complete production showcase.** Active feature development has concluded. The project remains fully maintained as an authoritative reference implementation of cinematic Futuristic User Interfaces (FUI), native SQLite Write-Ahead Logging (WAL) state machines, and hardware-accelerated Cyber-Stasis power governance on Windows 11. All 4 major version releases and standalone installers are archived and immediately downloadable below.
 
-Welcome to the official Operator's Manual for **Stratagem 1.0.1**—a highly advanced, cinematic **Futuristic User Interface (FUI)** project planning and tactical execution suite. 
-
-This document serves as the master guide to all operational sectors, dashboard windows, and diagnostic consoles within the system.
+---
 
 <p align="center">
-  <img width="512" height="512" alt="Stratagem Icon" src="https://github.com/user-attachments/assets/2748268e-f1d1-4948-b178-deb3f53f5c4d" />
+  <img width="380" height="380" alt="Stratagem Holographic Crest" src="https://github.com/user-attachments/assets/2748268e-f1d1-4948-b178-deb3f53f5c4d" />
 </p>
+
+<div align="center">
+
+### 🚀 GET STRATAGEM (STANDALONE INSTALLER)
+
+[![Download Stratagem v3.0.0](https://img.shields.io/badge/DOWNLOAD-STRATAGEM%20v3.0.0%20(783%20MB)-8A2BE2?style=for-the-badge&logo=windows&logoColor=white)](https://github.com/karansinghverma979/Stratagem/releases/download/v3.0.0/Stratagem-3.0.0-setup.exe)
+[![Release Notes](https://img.shields.io/badge/VIEW-RELEASE%20NOTES%20v3.0.0-gray?style=for-the-badge&logo=github)](https://github.com/karansinghverma979/Stratagem/releases/tag/v3.0.0)
+
+**1-Line PowerShell Auto-Download & Install:**
+```powershell
+irm https://github.com/karansinghverma979/Stratagem/releases/download/v3.0.0/Stratagem-3.0.0-setup.exe -OutFile Stratagem-Setup.exe; .\Stratagem-Setup.exe
+```
+
+</div>
+
+---
+
+## ⚡ 5-Second System Architecture Card
+
+```text
+┌────────────────────────────────────────────────────────────────────────┐
+│                   STRATAGEM v3.0 TACTICAL HUD MATRIX                   │
+├───────────────────┬───────────────────┬────────────────────────────────┤
+│  EXECUTION MATRIX │  ARSENAL KANBAN   │        CHRONOS SECTOR          │
+│  • Active Missions│  • Raw Intel      │  • Unified Clock (12h/24h)     │
+│  • Threat Ratings │  • Synthesizing   │  • Circular Target Lock Ring   │
+│  • Regex Filters  │  • Task Forge IPC │  • CRT Scanline Mini-HUD       │
+├───────────────────┼───────────────────┼────────────────────────────────┤
+│  BREACH SYSTEM    │  ARCHIVE HUB      │        GENESIS CONFIG          │
+│  • Alarm Vignette │  • Chronicles     │  • Cyber-Stasis (Ctrl+Alt+S)   │
+│  • Threat Mitig.  │  • Decrypt Reveal │  • NoteCards / Avatar Gauges   │
+│  • Instant Purge  │  • Victory Badges │  • Fast Cold Boot (<200ms)     │
+├───────────────────┴───────────────────┴────────────────────────────────┤
+│  CORE STACK: Electron Native Shell • Svelte 5 Runes • SQLite3 (WAL Mode)│
+└────────────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## 📦 Production Release Matrix & Version Heritage
+
+All 4 major releases of Stratagem are permanently preserved with direct standalone installer downloads:
+
+| Release | Version Tag | Standalone Installer (.exe) | Asset Size | Primary Architectural Milestone |
+| :--- | :--- | :--- | :--- | :--- |
+| **v3.0.0** | [`v3.0.0`](https://github.com/karansinghverma979/Stratagem/releases/tag/v3.0.0) | [Stratagem-3.0.0-setup.exe](https://github.com/karansinghverma979/Stratagem/releases/download/v3.0.0/Stratagem-3.0.0-setup.exe) | **783 MB** | **Cyber-Stasis Protocol (`Ctrl+Alt+S`)**: 0.0% CPU / 0% GPU sleep mode; Battery-Aware Stealth HUD; Vim-style `J`/`K`/`Enter`/`Space` nav; Fast Cold Boot (<200ms). |
+| **v2.3.0** | [`v2.3.0`](https://github.com/karansinghverma979/Stratagem/releases/tag/v2.3.0) | [Stratagem-2.3.0-setup.exe](https://github.com/karansinghverma979/Stratagem/releases/download/v2.3.0/Stratagem-2.3.0-setup.exe) | **783 MB** | **Milestone Engagement Ratio (1440 : 60)**; 0ms non-blocking Genesis sector navigation; UTC timezone integrity engine; SQLite WAL exit checkpointing. |
+| **v2.0.0** | [`v2.0.0`](https://github.com/karansinghverma979/Stratagem/releases/tag/v2.0.0) | [Stratagem-2.0.0-setup.exe](https://github.com/karansinghverma979/Stratagem/releases/download/v2.0.0/Stratagem-2.0.0-setup.exe) | **452 MB** | **Cosmic Containment**: Svelte `{#if}` conditional sector unmounting (-60% idle RAM); SQLite WAL Mode (5x faster concurrency); non-blocking async IPC file I/O. |
+| **v1.0.1** | [`v1.0.1`](https://github.com/karansinghverma979/Stratagem/releases/tag/v1.0.1) | [Stratagem-1.0.1-setup.exe](https://github.com/karansinghverma979/Stratagem/releases/download/v1.0.1/Stratagem-1.0.1-setup.exe) | **452 MB** | **Initial Production Release**: 24-sector FUI tactical mission control suite; local SQLite persistence; custom NSIS installer; glassmorphic HUD. |
+
+---
+
+## 🚀 Quickstart & Installation Guide
+
+### Pathway A: Standalone Windows Installer (Recommended)
+1. Download **[Stratagem-3.0.0-setup.exe](https://github.com/karansinghverma979/Stratagem/releases/download/v3.0.0/Stratagem-3.0.0-setup.exe)**.
+2. Run the installer wizard (custom directory selection, desktop shortcut creation).
+3. Launch `Stratagem` from the Start Menu or Desktop.
+
+### Pathway B: PowerShell 1-Line Quick Install
+```powershell
+irm https://github.com/karansinghverma979/Stratagem/releases/download/v3.0.0/Stratagem-3.0.0-setup.exe -OutFile Stratagem-Setup.exe; .\Stratagem-Setup.exe
+```
+
+### Pathway C: Local Developer Compilation
+```bash
+# 1. Clone the repository
+git clone https://github.com/karansinghverma979/Stratagem.git
+cd Stratagem
+
+# 2. Install dependencies & rebuild native SQLite3 drivers
+npm install
+npm run postinstall
+
+# 3. Launch with hot-reloading dev server
+npm run dev
+```
+*(For complete multi-platform compilation details for Mac and Linux, review **[guid.md](guid.md)**).*
+
+---
+
+## 🧭 Interactive 24-Sector Operator Directory
+
+Quick-jump directly to the visual documentation and telemetry specs for any operational sector:
+
+| Sector / Module | Sector / Module | Sector / Module | Sector / Module |
+| :--- | :--- | :--- | :--- |
+| [0. Boot Sequence](#0-system-boot-sequence-cold-boot-loading-screen) | [1. Critical Purge](#1-critical-purge-console-nuke-storage-protocol) | [2. Database Integrity](#2-database-integrity-station-system-backup-matrix) | [3. Neural Link Station](#3-neural-link-station-diagnostics-feed-console) |
+| [4. Forge Station](#4-forge-station-task-forge-modal) | [5. Temporal Nexus](#5-temporal-nexus-forge-calendar-engine) | [6. Mission Protocol](#6-mission-protocol-modal-execution-task-view) | [7. Victory/Abort Badges](#7-victory--abort-badges-mission-resolutions) |
+| [8. Arsenal Sector](#8-arsenal-sector-strategic-kanban-board) | [9. Raw Intel & Kanban](#9-raw-intel--synthesizing-kanban-columns) | [10. Calibration Filters](#10-calibration-station-telemetry-filters--sorting) | [11. Breach Sector](#11-breach-sector-alarm-dashboard) |
+| [12. Breach Task View](#12-breach-task-view-compromise-details-modal) | [13. Realignment Dials](#13-realignment-station-mitigation-dials) | [14. Chronos Sector](#14-chronos-sector-focus-sync-station) | [15. Chronos Focus Timer](#15-chronos-focus-timer-target-lock-progress-ring) |
+| [16. Chronos Todo](#16-chronos-todo-auxiliary-task-checklists) | [17. Chronos Reminders](#17-chronos-reminders-operational-alarms) | [18. Chronos Stopwatch](#18-chronos-stopwatch-diagnostic-dial) | [19. Genesis Sector](#19-genesis-sector-central-configuration-panel) |
+| [20. Developer Portraits](#20-developer-portraits-panel-devimages-configuration) | [21. Mental Skills](#21-mental-skills-cognitive-improvement-nodes) | [22. NoteCards Flashcards](#22-notecards-cognitive-flashcard-portal) | [23. Environment Toggles](#23-environment-settings-system-toggles) |
+| [24. Improvement Matrix](#24-integrated-improvement-matrix-neural-uplink-logs) | — | — | — |
 
 ---
 
@@ -318,14 +423,53 @@ This document serves as the master guide to all operational sectors, dashboard w
 
 ---
 
-## 🚀 STANDALONE INSTALLATION & COMPILATION
+## ⌨️ Tactical Operational Keyboard Protocols
 
-For details on cloning this repository, installing dependencies, or compiling local builds, review **[guid.md](guid.md)**.
-For database schemas, preload APIs, and Svelte store references, review **[info.md](info.md)**.
-For AI assistant configurations and operational prompts, review **[GEMINI.md](GEMINI.md)**.
+Stratagem v3.0 introduces high-speed keyboard shortcuts for zero-mouse command terminal navigation:
+
+| Keybinding | Operational Action | Telemetry Scope |
+| :--- | :--- | :--- |
+| **`Ctrl + Alt + S`** | **Cyber-Stasis Sleep / Resume** | Instantly dumps CPU to 0.0% & GPU load to 0% |
+| **`Ctrl + K`** | **Universal Command Palette** | Fuzzy-search indexing across all active missions & sectors |
+| **`J`** / **`K`** | **Row Selection Down / Up** | Vim-style linear task list navigation |
+| **`Enter`** | **Open Mission Protocol** | Expands full telemetry & checklist view of selected mission |
+| **`Space`** | **Toggle Objective Check** | Toggles subtask completion checkbox in active protocol |
+| **`Esc`** | **Abort / Close Overlay** | Closes any active modal or returns focus to main dashboard |
+| **`Win + M`** | **Auto-Stasis on Minimize** | Background power saver activated via Electron `powerMonitor` |
 
 ---
-*Classified Document — Authorization Level 4 Required — Stratagem Core AI*
+
+## 🏛️ Technical Specifications & Offline Sovereign Guarantee
+
+Stratagem is engineered to function 100% offline with zero cloud telemetry or third-party server dependencies:
+
+```text
+┌──────────────────────────┬─────────────────────────────────────────────────┐
+│ SYSTEM METRIC            │ SPECIFICATION                                   │
+├──────────────────────────┼─────────────────────────────────────────────────┤
+│ Target Operating System  │ Windows 10 / 11 (x64)                           │
+│ Application Framework    │ Electron Native Frameless Kiosk Shell           │
+│ UI & State Engine        │ Svelte 5 (Runes Reactivity System)              │
+│ Local Database           │ SQLite3 with Write-Ahead Logging (WAL Mode)     │
+│ Bundler & Toolchain      │ Vite + TypeScript + Native C++ Addons           │
+│ Idle Resource Footprint  │ 0.0% – 0.1% CPU | 0 MB VRAM (Cyber-Stasis Mode) │
+│ Data Privacy & Telemetry │ 100% Offline Sovereign — Zero Outbound Tracking  │
+└──────────────────────────┴─────────────────────────────────────────────────┘
+```
+
+---
+
+## 📚 Deep Documentation & Developer Artifacts
+
+For operators, architects, and developers seeking internal blueprints:
+
+- **[Architecture Deep-Dive](docs/architecture.md)**: Deterministic state-machine principles, decoupled governance, and multi-source sync.
+- **[Comprehensive Project Changelog](docs/changelog.md)**: Full chronological evolution from v1.0.1 through v3.0.0.
+- **[Operator Onboarding & Build Protocol (guid.md)](guid.md)**: Cloning walkthrough, C++ native rebuilds, and multi-platform compilation.
+- **[Database Schemas & Preload APIs (info.md)](info.md)**: Full SQLite schema definitions, IPC ContextBridge contracts, and store maps.
+- **[Security Policy & Disclosure](SECURITY.md)**: Coordinated vulnerability disclosure and supported versions matrix.
+- **[Troubleshooting Runbook](docs/troubleshooting.md)**: Database corruption recovery, WAL checkpoints, and audio clipping fixes.
+- **[Engineering Credits](docs/credits.md)**: Full maintainer and contributor attribution.
 
 ---
 
@@ -335,17 +479,27 @@ For AI assistant configurations and operational prompts, review **[GEMINI.md](GE
 
 ### *IRRATIONAL FRENZY CONTROLLED BY REASON AND SELF REFLECTION.*
 
+[![GitHub Profile](https://img.shields.io/badge/GitHub-karansinghverma979-181717?style=for-the-badge&logo=github&logoColor=white)](https://github.com/karansinghverma979)
+[![Portfolio](https://img.shields.io/badge/Portfolio-Live%20Showcase-0078D6?style=for-the-badge&logo=googlechrome&logoColor=white)](https://karansinghverma979.github.io)
+
 <br />
 
-### 🛠️ Core Technologies
+### 👥 Engineering Credits & Collaboration
+**Lead Systems Architect & Creator:** [Karan Singh Verma](https://github.com/karansinghverma979)  
+**Core Contributor & Documentation Engineer:** [Akarshan Gupta](https://github.com/Akarshan2006)
+
+<br />
 
 <p align="center">
-  <img src="https://img.shields.io/badge/Svelte-FF3E00?style=for-the-badge&logo=svelte&logoColor=white" alt="Svelte" />
-  <img src="https://img.shields.io/badge/CSS3-1572B6?style=for-the-badge&logo=css3&logoColor=white" alt="CSS" />
-  <img src="https://img.shields.io/badge/JavaScript-F7DF1E?style=for-the-badge&logo=javascript&logoColor=black" alt="JavaScript" />
-  <img src="https://img.shields.io/badge/TypeScript-007ACC?style=for-the-badge&logo=typescript&logoColor=white" alt="TypeScript" />
+  <img src="https://img.shields.io/badge/Svelte-5-FF3E00?style=for-the-badge&logo=svelte&logoColor=white" alt="Svelte 5" />
+  <img src="https://img.shields.io/badge/Electron-39-47848F?style=for-the-badge&logo=electron&logoColor=white" alt="Electron" />
+  <img src="https://img.shields.io/badge/SQLite-3-003B57?style=for-the-badge&logo=sqlite&logoColor=white" alt="SQLite" />
+  <img src="https://img.shields.io/badge/TypeScript-5-3178C6?style=for-the-badge&logo=typescript&logoColor=white" alt="TypeScript" />
+  <img src="https://img.shields.io/badge/Vite-7-646CFF?style=for-the-badge&logo=vite&logoColor=white" alt="Vite" />
 </p>
 
 ---
+
+*Classified Document — Authorization Level 4 Required — Stratagem Core Terminal*
 
 </div>

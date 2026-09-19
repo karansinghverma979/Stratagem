@@ -9,10 +9,10 @@ To clone and initialize the **Stratagem** codebase in your local environment, ex
 
 ```bash
 # 1. Clone the repository from GitHub
-git clone https://github.com/YOUR_USERNAME/YOUR_REPOSITORY_NAME.git
+git clone https://github.com/karansinghverma979/Stratagem.git
 
 # 2. Enter the project root directory
-cd YOUR_REPOSITORY_NAME
+cd Stratagem
 ```
 
 ---

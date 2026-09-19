@@ -1,7 +1,7 @@
 {
-  "name": "n0-furnace",
+  "name": "stratagem",
   "version": "3.0.0",
-  "description": "An Electron application with Svelte and TypeScript",
+  "description": "Tactical Intelligence Operating System & Mission Control Matrix built with Svelte 5, Electron and SQLite3",
   "main": "./out/main/index.js",
   "author": "Karan Singh Verma",
   "homepage": "https://github.com/karansinghverma979/",

@@ -1,0 +1,36 @@
+name: Stratagem CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    name: Code Quality & Type Integrity
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Set up Node.js Runtime
+        uses: actions/setup-node@39370e3970a6d050c480ffad4ff0ed4d3fdee5af # v4.1.0
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install Project Dependencies
+        run: npm ci
+
+      - name: Verify Formatting Check
+        run: npx prettier --check .
+
+      - name: Run ESLint Linter
+        run: npm run lint
+
+      - name: TypeScript & Svelte Rune Typecheck
+        run: npm run typecheck

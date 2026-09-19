@@ -10,5 +10,6 @@ Instead, please send an advisory or disclose responsibly via GitHub Security Adv
 
 | Version | Supported          |
 | ------- | ------------------ |
+| 3.x     | :white_check_mark: |
 | 2.x     | :white_check_mark: |
 | 1.x     | :x:                |

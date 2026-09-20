@@ -5,6 +5,10 @@
   <a href="https://github.com/karansinghverma979/Stratagem/releases/tag/v3.0.0">
     <img src="https://img.shields.io/badge/Release-v3.0.0--Production-blueviolet?style=for-the-badge&logo=electron&logoColor=white" alt="Release Build v3.0.0" />
   </a>
+  <img src="https://img.shields.io/badge/Status-Feature--Complete%20%7C%20Showcase-gold?style=for-the-badge&logo=shieldsdotio&logoColor=white" alt="Status" />
+  <a href="CONTRIBUTING.md">
+    <img src="https://img.shields.io/badge/PRs-Closed%20(Forks%20Welcome)-blue?style=for-the-badge&logo=git&logoColor=white" alt="PRs Closed" />
+  </a>
   <img src="https://img.shields.io/badge/Platform-Windows%2010%20%2F%2011%20x64-0078D6?style=for-the-badge&logo=windows&logoColor=white" alt="Windows 11" />
   <img src="https://img.shields.io/badge/Architecture-Svelte%205%20%2B%20Electron%20%2B%20SQLite3-FF3E00?style=for-the-badge&logo=svelte&logoColor=white" alt="Architecture" />
   <img src="https://img.shields.io/badge/Idle%20Load-0.0%25%20CPU%20%7C%200%25%20GPU-brightgreen?style=for-the-badge" alt="0% Idle Load" />
@@ -18,7 +22,7 @@
 
 > [!NOTE]
 > **🏛️ FLAGSHIP SHOWCASE & REPOSITORY STATUS**:
-> **Stratagem v3.0.0 is a stable, feature-complete production showcase.** Active feature development has concluded. The project remains fully maintained as an authoritative reference implementation of cinematic Futuristic User Interfaces (FUI), native SQLite Write-Ahead Logging (WAL) state machines, and hardware-accelerated Cyber-Stasis power governance on Windows 11. All 4 major version releases and standalone installers are archived and immediately downloadable below.
+> **Stratagem v3.0.0 is an immutable, feature-complete production showcase & architectural reference.** Active feature development has concluded, and external pull requests are not accepted. The project remains permanently open-source as an authoritative reference implementation of cinematic Futuristic User Interfaces (FUI), native SQLite Write-Ahead Logging (WAL) state machines, and hardware-accelerated Cyber-Stasis power governance on Windows 11. All 4 major version releases and standalone installers are permanently archived and immediately downloadable below. Developers are warmly invited to fork and customize the codebase under the [MIT License](LICENSE). See [CONTRIBUTING.md](CONTRIBUTING.md) for details.
 
 ---
 

@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: ♟️ Standalone Releases & Installers
+    url: https://github.com/karansinghverma979/Stratagem/releases
+    about: Download production Windows installers (v3.0.0, v2.0.0, v1.0.0) and view changelogs.
+  - name: 📖 Architectural Documentation & Manual
+    url: https://github.com/karansinghverma979/Stratagem/tree/main/docs
+    about: Browse comprehensive system architecture, SQLite WAL specs, and Cyber-Stasis blueprints.
+  - name: 🍴 Fork Stratagem for Personal Customization
+    url: https://github.com/karansinghverma979/Stratagem/fork
+    about: Fork this repository under the MIT License to build custom variations and experiments.

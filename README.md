@@ -618,6 +618,15 @@ For operators, visual architects, and developers seeking internal blueprints:
 
 ---
 
+## ⚔️ Tactical Siblings: Campaigns Command Center & FastMCP Plugin
+
+Looking for a lightweight daily task execution counterpart or AI agent integration?
+
+* **⚔️ [Campaigns Command Center](https://github.com/karansinghverma979/Campaigns)**: The streamlined, sub-millisecond daily execution counterpart to Stratagem. While Stratagem serves as the cinematic macro-strategic life planning matrix, Campaigns focuses on daily strikes, milestone checkpoints, and dual-entry cash flow runways with near-zero RAM footprint.
+* **🤖 [Antigravity Campaigns Plugin](https://github.com/karansinghverma979/antigravity-campaigns-plugin)**: Official FastMCP server allowing Google Antigravity and Claude agents to autonomously query, update, and manage campaigns and strikes in the background.
+
+---
+
 <div align="center">
 
 # KARAN SINGH VERMA

@@ -610,7 +610,7 @@ For operators, visual architects, and developers seeking internal blueprints:
 - **[Release 1.0.1 Notes (Release-1.md)](Release-1.md)**: Initial production launch, 24-sector FUI layout, and NSIS installer.
 - **[Operator Onboarding & Build Protocol (GUIDE.md)](GUIDE.md)**: Cloning walkthrough, C++ native rebuilds, and multi-platform compilation.
 - **[Database Schemas & Preload APIs (INFO.md)](INFO.md)**: Full SQLite schema definitions, IPC ContextBridge contracts, and store maps.
-- **[System Architecture Deep-Dive (docs/architecture.md)](docs/architecture.md)**: Deterministic state-machine principles and multi-source sync.
+- **[System Architecture Deep-Dive (docs/ARCHITECTURE.md)](docs/ARCHITECTURE.md)**: Deterministic state-machine principles and multi-source sync.
 - **[Comprehensive Project Changelog (docs/changelog.md)](docs/changelog.md)**: Full chronological evolution from v1.0.1 through v3.0.0.
 - **[Security Policy & Disclosure (SECURITY.md)](SECURITY.md)**: Coordinated vulnerability disclosure and supported versions matrix.
 - **[Troubleshooting Runbook (docs/troubleshooting.md)](docs/troubleshooting.md)**: Database corruption recovery, WAL checkpoints, and audio clipping fixes.
